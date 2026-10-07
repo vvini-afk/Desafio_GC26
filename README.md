@@ -10,14 +10,6 @@ Projeto inicial do desafio GC, implementado com Spring Boot 4, Java 21, Spring D
 
 Por padrão, a aplicação usa um banco H2 em memória. O Flyway cria o schema ao iniciar; os dados são descartados quando a aplicação é encerrada.
 
-Para usar PostgreSQL, defina as variáveis antes de iniciar:
-
-```powershell
-$env:DB_URL = "jdbc:postgresql://localhost:5432/recomendacao"
-$env:DB_USERNAME = "postgres"
-$env:DB_PASSWORD = "sua-senha"
-.\mvnw.cmd spring-boot:run
-```
 
 ## Endpoint inicial
 
