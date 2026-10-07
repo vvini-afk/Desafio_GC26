@@ -26,3 +26,14 @@ $env:DB_PASSWORD = "sua-senha"
 Esta é uma regra inicial provisória: cada produto ativo recebe score `1.0` e o motivo `Produto ativo`. O diagrama não define a fórmula nem os pesos; essa regra serve para deixar o fluxo HTTP e a persistência executáveis enquanto as regras de recomendação são implementadas.
 
 A documentação OpenAPI fica disponível em `/swagger-ui.html`.
+
+## APIs de contexto
+
+O Open-Meteo é usado para localizar cidades brasileiras e consultar o clima atual. A BrasilAPI fornece os feriados nacionais e, quando informada, os feriados estaduais da UF.
+
+- `GET /api/contexto/localizacao?cidade=São Paulo`
+- `GET /api/contexto/clima?cidade=São Paulo`
+- `GET /api/contexto/feriados?ano=2026`
+- `GET /api/contexto/feriados?ano=2026&uf=SP`
+
+Esses endpoints consultam as APIs externas no momento da requisição. A aplicação ainda não usa esses dados para alterar a pontuação das recomendações; o diagrama não define as regras ou pesos para essa influência.
