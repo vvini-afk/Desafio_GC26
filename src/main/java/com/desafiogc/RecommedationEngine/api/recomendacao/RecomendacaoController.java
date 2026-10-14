@@ -19,6 +19,8 @@ public class RecomendacaoController {
 
     @GetMapping("/{clienteId}")
     public ResponseEntity<List<RecomendacaoDTO>> recomendar(@PathVariable Long clienteId) {
-        return ResponseEntity.ok(motorRecomendacaoService.recomendar(clienteId));
+        return ResponseEntity.ok(motorRecomendacaoService.recomendar(clienteId).stream()
+                .map(RecomendacaoDTO::from)
+                .toList());
     }
 }
