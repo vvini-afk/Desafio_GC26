@@ -91,15 +91,50 @@ GET /api/recomendacoes/{clienteId}
 
 Ele recebe o identificador de um cliente e retorna os produtos ativos associados ao fluxo inicial de recomendação.
 
-Atualmente, a regra de recomendação ainda é **provisória**:
+### Hipótese e regra inicial (V1)
 
-* produtos ativos recebem `score = 1.0`;
-* o motivo retornado é `Produto ativo`;
-* caso o cliente não exista, a API retorna `404`.
+**Hipótese:** clientes tendem a se interessar por produtos de categorias que já compraram; produtos complementares aos itens do histórico também são relevantes; uma promoção ativa aumenta a atratividade no momento da consulta. São sinais simples e explicáveis para iniciar o ranking, não uma previsão treinada por IA.
 
-Essa regra foi criada para manter o fluxo HTTP e a persistência funcionais enquanto as regras definitivas do motor de recomendação são desenvolvidas.
+Os produtos inativos são excluídos. Cada produto ativo recebe 10 pontos de base. O ranking soma:
 
-A fórmula de pontuação e os pesos das futuras regras ainda não estão definidos no projeto.
+| Sinal | Pontos | Justificativa |
+| --- | ---: | --- |
+| Cada item comprado na mesma categoria | +5, limitado a +25 | Representa preferência observada, sem deixar uma categoria dominar o score. |
+| Complementaridade com algum produto comprado | +20 | Usa a relação de complementos cadastrada no próprio produto. |
+| Promoção ativa para o produto ou sua categoria | +15 | Destaca uma oferta vigente durante a consulta. |
+
+A lista é ordenada do maior para o menor score e cada item explica os sinais que contribuíram. Em empate, os produtos são ordenados pelo identificador. Sem histórico ou promoção, o produto ativo retorna com 10 pontos e essa condição é indicada no motivo. Cliente inexistente retorna `404`.
+
+O endpoint de contexto externo (clima e feriados) permanece disponível, mas não entra no cálculo V1 porque não há uma relação de negócio definida entre essas variáveis e as categorias de produto.
+
+### Cadastro de dados para alimentar o motor
+
+Os endpoints abaixo validam a entrada e gravam os dados nas entidades existentes:
+
+* `POST /api/clientes` — cadastra cliente.
+* `POST /api/produtos` — cadastra produto; `produtosComplementaresIds` é opcional e referencia produtos já cadastrados.
+* `POST /api/pedidos` — registra uma compra e seus itens; quantidades devem ser positivas.
+* `POST /api/promocoes` — cadastra promoção por produto ou categoria, com tipo, valor e período.
+
+Exemplo de inclusão de compra:
+
+```json
+{
+  "clienteId": 1,
+  "dataCompra": "2026-10-14",
+  "itens": [
+    { "produtoId": 2, "quantidade": 1 }
+  ]
+}
+```
+
+Exemplo de consulta do ranking:
+
+```http
+GET /api/recomendacoes/1
+```
+
+Os dados do banco modelado são ligados por Spring Data JPA às entidades existentes; Flyway continua aplicando a migration `V1__criar_estrutura_inicial.sql`. Para apontar a aplicação ao PostgreSQL, configure `DB_URL`, `DB_USER` e `DB_PASSWORD`. Sem essas variáveis, o perfil local usa H2 em memória.
 
 ---
 
@@ -332,8 +367,9 @@ O projeto encontra-se em uma etapa inicial de desenvolvimento.
 * Persistência com Spring Data JPA;
 * Migrations com Flyway;
 * Suporte a H2 e PostgreSQL;
-* Endpoint inicial de recomendações;
-* Regra provisória de recomendação;
+* Endpoint de recomendações com ranking por histórico, complementos e promoção vigente;
+* Motivos do score retornados junto a cada produto;
+* Cadastro de clientes, produtos, compras e promoções para alimentar a recomendação;
 * Integração com Open-Meteo;
 * Consulta de localização;
 * Consulta de clima;
@@ -343,12 +379,9 @@ O projeto encontra-se em uma etapa inicial de desenvolvimento.
 
 ### Próximas evoluções
 
-* Desenvolvimento das regras reais de recomendação;
-* Definição dos pesos de cada fator;
-* Utilização dos dados de clima, localização e calendário no score;
-* Evolução do modelo de recomendação;
-* Combinação de diferentes fatores de contexto;
-* Aprimoramento da priorização dos produtos recomendados.
+* Validar os pesos do score V1 com dados reais;
+* Definir relações justificadas entre clima, localização, calendário e categorias antes de usar esses dados no score;
+* Aprimorar a priorização e avaliar a qualidade das recomendações.
 
 ---
 
