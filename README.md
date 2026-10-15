@@ -1,120 +1,168 @@
 # Motor de Recomendação
 
-Projeto inicial desenvolvido para o desafio do **Geração Caldeira**, com o objetivo de construir a base de um motor de recomendação de produtos.
+Projeto desenvolvido para o desafio do **Geração Caldeira**, com o objetivo de construir a base de um motor de recomendação de produtos.
 
-A aplicação foi desenvolvida em **Java 21** utilizando **Spring Boot 4.1.1**, com persistência através do Spring Data JPA e gerenciamento do banco de dados com Flyway.
+A aplicação utiliza **Java 21**, **Spring Boot 4.1.1**, **Spring Data JPA** e **PostgreSQL** para persistência dos dados.
 
-O projeto está estruturado para permitir a evolução das regras de recomendação, inicialmente utilizando dados de produtos e clientes e, posteriormente, incorporando informações de contexto como **localização, clima e feriados**.
+O projeto evoluiu da estrutura inicial para uma aplicação conectada a um banco de dados real. Também foi criada uma controller de teste para consultar os clientes cadastrados e retornar seus dados em formato JSON, permitindo validar a comunicação entre a aplicação e o banco.
+
+A arquitetura está preparada para a evolução das regras de recomendação, combinando informações de clientes, produtos e histórico de compras com dados de contexto, como localização, clima e feriados.
 
 ---
 
 ## Tecnologias utilizadas
 
-* **Java 21** — linguagem principal do projeto.
-* **Spring Boot 4.1.1** — framework utilizado para construção da aplicação.
-* **Spring Web MVC** — criação dos endpoints REST.
-* **Spring Data JPA** — persistência e acesso aos dados.
-* **Flyway** — versionamento e criação das estruturas do banco de dados através de migrations.
-* **PostgreSQL** — banco de dados suportado pela aplicação.
-* **H2 Database** — banco em memória utilizado no ambiente inicial de desenvolvimento.
-* **Bean Validation** — validação dos dados recebidos pela aplicação.
-* **Lombok** — redução de código repetitivo nas classes Java.
-* **Springdoc OpenAPI / Swagger UI** — documentação e exploração dos endpoints REST.
-* **Maven** — gerenciamento de dependências e build do projeto.
+- **Java 21** — linguagem principal do projeto.
+- **Spring Boot 4.1.1** — framework para construção da aplicação.
+- **Spring Web MVC** — criação dos endpoints REST.
+- **Spring Data JPA** — persistência e acesso aos dados.
+- **PostgreSQL** — banco de dados utilizado pela aplicação.
+- **Bean Validation** — validação dos dados recebidos pela aplicação.
+- **Lombok** — redução de código repetitivo nas classes Java.
+- **Springdoc OpenAPI / Swagger UI** — documentação e exploração dos endpoints REST.
+- **Maven** — gerenciamento de dependências e build do projeto.
 
-As dependências e versões utilizadas estão definidas no `pom.xml` do projeto.
+As dependências e versões utilizadas estão definidas no `pom.xml`.
+
+O projeto utiliza o Spring Data JPA para realizar as operações de persistência. O Flyway, utilizado na estrutura inicial, foi removido após a integração com o banco de dados.
 
 ---
 
-## Arquitetura inicial
+## Arquitetura da aplicação
 
 A aplicação utiliza uma arquitetura baseada na separação de responsabilidades proporcionada pelo Spring.
 
-De forma simplificada, o fluxo inicial da aplicação pode ser representado da seguinte maneira:
+O fluxo de comunicação entre as principais camadas pode ser representado da seguinte maneira:
 
 ```text
-                    ┌──────────────────────┐
-                    │       Cliente        │
-                    │  HTTP / REST Request │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │     Controller       │
-                    │   Endpoints REST     │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │       Service        │
-                    │   Regra de negócio   │
-                    └──────────┬───────────┘
-                               │
-                ┌──────────────┴──────────────┐
-                │                             │
-                ▼                             ▼
-       ┌──────────────────┐          ┌──────────────────┐
-       │    Repository    │          │ APIs externas    │
-       │   Spring Data    │          │ Open-Meteo /     │
-       │       JPA        │          │ BrasilAPI        │
-       └────────┬─────────┘          └──────────────────┘
-                │
-                ▼
-       ┌──────────────────┐
-       │     Banco de     │
-       │      dados       │
-       │ PostgreSQL / H2  │
-       └──────────────────┘
+                 Cliente HTTP / REST
+                         |
+                         v
+                    Controller
+                         |
+                         v
+                      Service
+                         |
+             +-----------+-----------+
+             |                       |
+             v                       v
+         Repository             APIs externas
+       Spring Data JPA       Open-Meteo / BrasilAPI
+             |
+             v
+        Banco de dados
+         PostgreSQL
 ```
 
-Essa estrutura representa a base atual do projeto e permite que as regras de recomendação sejam implementadas gradualmente sem concentrar toda a responsabilidade em uma única camada.
+### Responsabilidades das camadas
 
-### Persistência
+- **Controller:** recebe as requisições HTTP e disponibiliza os endpoints da API.
+- **Service:** concentra as regras de negócio e a lógica da aplicação.
+- **Repository:** realiza o acesso aos dados utilizando o Spring Data JPA.
+- **Banco de dados:** armazena os dados persistentes utilizados pela aplicação.
+- **APIs externas:** fornecem informações complementares de localização, clima e calendário.
 
-O **Spring Data JPA** é responsável pela comunicação entre a aplicação e o banco de dados.
+Essa organização facilita a manutenção do código e permite adicionar novas funcionalidades sem concentrar todas as responsabilidades em uma única classe.
 
-O **Flyway** é utilizado para controlar a evolução do schema por meio de migrations. Ao iniciar a aplicação no ambiente configurado com H2, o banco é criado em memória e as migrations são executadas.
+---
 
-No ambiente inicial, os dados do H2 são perdidos quando a aplicação é encerrada.
+## Persistência de dados
 
-O projeto também possui dependência do driver do **PostgreSQL**, permitindo a utilização de um banco PostgreSQL para um ambiente persistente.
+O projeto utiliza **PostgreSQL hospedado no Supabase**, integrado à aplicação por meio do Spring Data JPA.
+
+As entidades Java representam os dados manipulados pela aplicação, enquanto os repositórios realizam as operações de consulta e persistência.
+
+Após a integração com o banco de dados, o Flyway foi removido do projeto. A aplicação passou a utilizar a conexão com o PostgreSQL do Supabase para acessar os dados persistidos.
+
+As configurações de conexão devem ser definidas de acordo com as propriedades utilizadas pelo projeto. As credenciais do banco de dados não devem ser armazenadas diretamente no código-fonte nem enviadas ao GitHub.
+
+### Consulta de clientes
+
+Foi criada uma controller de teste para validar a comunicação entre a aplicação Spring Boot e o banco de dados.
+
+**Endpoint disponível:**
+
+```http
+GET http://localhost:8080/teste/cliente
+```
+
+A requisição consulta os clientes armazenados no banco de dados do Supabase e retorna os dados em formato JSON.
+
+Essa implementação permite verificar se a aplicação consegue recuperar os registros por meio da camada de persistência e disponibilizá-los através de uma API REST.
+
+O endpoint tem finalidade de teste e validação da integração com o banco de dados.
+
+### Consulta de clientes
+
+Foi criada uma controller de teste para verificar a integração entre a API e o banco de dados.
+
+Essa funcionalidade permite consultar os clientes cadastrados e retornar os registros em formato JSON, facilitando a validação dos dados recuperados pela aplicação.
+
+O fluxo da consulta é:
+
+```text
+Requisição HTTP
+      |
+      v
+Controller de teste
+      |
+      v
+Repository JPA
+      |
+      v
+Banco de dados
+      |
+      v
+Lista de clientes
+      |
+      v
+Resposta JSON
+```
+
+Essa implementação funciona como uma etapa de validação da persistência e da exposição dos dados por meio da API REST.
+
+> **Observação:** o caminho exato do endpoint de teste deve ser documentado conforme o mapeamento definido na controller.
 
 ---
 
 ## Motor de recomendação
 
-O endpoint principal do projeto é:
+O endpoint principal do motor de recomendação é:
 
 ```http
 GET /api/recomendacoes/{clienteId}
 ```
 
-Ele recebe o identificador de um cliente e retorna os produtos ativos associados ao fluxo inicial de recomendação.
+Ele recebe o identificador de um cliente e retorna os produtos ativos associados ao fluxo de recomendação.
 
 ### Hipótese e regra inicial (V1)
 
-**Hipótese:** clientes tendem a se interessar por produtos de categorias que já compraram; produtos complementares aos itens do histórico também são relevantes; uma promoção ativa aumenta a atratividade no momento da consulta. São sinais simples e explicáveis para iniciar o ranking, não uma previsão treinada por IA.
+A regra inicial considera que clientes podem apresentar interesse por produtos de categorias que já compraram, por produtos complementares aos itens do histórico e por ofertas vigentes.
 
-Os produtos inativos são excluídos. Cada produto ativo recebe 10 pontos de base. O ranking soma:
+Esses fatores são utilizados para calcular um score explicável, sem depender de um modelo de inteligência artificial treinado.
 
-| Sinal | Pontos | Justificativa |
-| --- | ---: | --- |
-| Cada item comprado na mesma categoria | +5, limitado a +25 | Representa preferência observada, sem deixar uma categoria dominar o score. |
-| Complementaridade com algum produto comprado | +20 | Usa a relação de complementos cadastrada no próprio produto. |
-| Promoção ativa para o produto ou sua categoria | +15 | Destaca uma oferta vigente durante a consulta. |
+Os produtos inativos são excluídos. Cada produto ativo recebe 10 pontos de base, e o ranking considera os seguintes sinais:
 
-A lista é ordenada do maior para o menor score e cada item explica os sinais que contribuíram. Em empate, os produtos são ordenados pelo identificador. Sem histórico ou promoção, o produto ativo retorna com 10 pontos e essa condição é indicada no motivo. Cliente inexistente retorna `404`.
+| Sinal | Pontuação | Justificativa |
+|---|---:|---|
+| Cada item comprado na mesma categoria | +5, limitado a +25 | Representa uma preferência observada do cliente. |
+| Complementaridade com algum produto comprado | +20 | Considera relações de complementaridade cadastradas nos produtos. |
+| Promoção ativa para o produto ou sua categoria | +15 | Destaca ofertas vigentes no momento da consulta. |
 
-O endpoint de contexto externo (clima e feriados) permanece disponível, mas não entra no cálculo V1 porque não há uma relação de negócio definida entre essas variáveis e as categorias de produto.
+A lista é ordenada do maior para o menor score. Cada recomendação apresenta os motivos que contribuíram para sua pontuação.
 
-### Cadastro de dados para alimentar o motor
+Em caso de empate, os produtos são ordenados pelo identificador. Na ausência de histórico ou promoção, o produto ativo mantém a pontuação-base de 10 pontos, com essa condição indicada no motivo. Um cliente inexistente retorna `404`.
 
-Os endpoints abaixo validam a entrada e gravam os dados nas entidades existentes:
+Os dados de clima e feriados permanecem como informações de contexto e ainda não interferem no cálculo do score V1.
 
-* `POST /api/clientes` — cadastra cliente.
-* `POST /api/produtos` — cadastra produto; `produtosComplementaresIds` é opcional e referencia produtos já cadastrados.
-* `POST /api/pedidos` — registra uma compra e seus itens; quantidades devem ser positivas.
-* `POST /api/promocoes` — cadastra promoção por produto ou categoria, com tipo, valor e período.
+### Endpoints de cadastro
+
+Os endpoints abaixo fazem parte do fluxo de alimentação dos dados utilizados pelo motor:
+
+- `POST /api/clientes` — cadastra um cliente.
+- `POST /api/produtos` — cadastra um produto. O campo `produtosComplementaresIds` é opcional e referencia produtos já cadastrados.
+- `POST /api/pedidos` — registra uma compra e seus itens. As quantidades devem ser positivas.
+- `POST /api/promocoes` — cadastra uma promoção por produto ou categoria, com tipo, valor e período.
 
 Exemplo de inclusão de compra:
 
@@ -123,208 +171,187 @@ Exemplo de inclusão de compra:
   "clienteId": 1,
   "dataCompra": "2026-10-14",
   "itens": [
-    { "produtoId": 2, "quantidade": 1 }
+    {
+      "produtoId": 2,
+      "quantidade": 1
+    }
   ]
 }
 ```
 
-Exemplo de consulta do ranking:
+Exemplo de consulta das recomendações:
 
 ```http
 GET /api/recomendacoes/1
 ```
 
-Os dados do banco modelado são ligados por Spring Data JPA às entidades existentes; Flyway continua aplicando a migration `V1__criar_estrutura_inicial.sql`. Para apontar a aplicação ao PostgreSQL, configure `DB_URL`, `DB_USER` e `DB_PASSWORD`. Sem essas variáveis, o perfil local usa H2 em memória.
-
 ---
 
 # APIs externas
 
-O projeto possui uma camada inicial de **dados de contexto**, que futuramente poderá ser utilizada pelo motor de recomendação.
+O projeto possui uma camada de integração com fontes externas de dados de contexto, que poderão ser utilizadas futuramente pelo motor de recomendação.
 
-Atualmente existem três grupos de informações externas:
+As integrações contemplam três grupos de informações:
 
-1. localização;
-2. clima;
-3. feriados.
+1. Localização.
+2. Clima.
+3. Feriados.
 
-Esses dados são consultados através de duas APIs externas:
+As APIs utilizadas são:
 
-* **Open-Meteo**
-* **BrasilAPI**
+- **Open-Meteo** — localização e informações meteorológicas.
+- **BrasilAPI** — informações relacionadas a feriados.
 
-Os endpoints de contexto realizam as consultas às APIs externas no momento da requisição.
-
-> Importante: os dados retornados pelas APIs de contexto ainda **não alteram o score das recomendações**. A integração existe como base para a evolução futura das regras do motor.
+Os dados retornados por essas integrações ainda não alteram o score das recomendações. A implementação atual fornece uma base para futuras regras de negócio.
 
 ---
 
 ## Open-Meteo
 
-O projeto utiliza a **Open-Meteo** para obter informações relacionadas à localização e ao clima.
+A Open-Meteo é utilizada para obter informações de localização e clima.
 
-A Open-Meteo disponibiliza uma **Geocoding API**, capaz de pesquisar uma localização a partir do nome de uma cidade, além da API de previsão meteorológica. A plataforma não exige API key para seu uso não comercial.
+Sua Geocoding API permite pesquisar localidades a partir do nome de uma cidade, enquanto a API meteorológica utiliza coordenadas geográficas para consultar informações sobre as condições climáticas.
 
 ### Localização
-
-A aplicação possui o endpoint:
 
 ```http
 GET /api/contexto/localizacao?cidade=São Paulo
 ```
 
-A partir do nome da cidade informado, a integração com o serviço de geocoding da Open-Meteo permite obter informações de localização necessárias para as consultas meteorológicas.
+O endpoint consulta a localização informada utilizando a integração com o serviço de geocoding.
 
-O fluxo conceitual é:
+Fluxo conceitual:
 
 ```text
 Nome da cidade
-      │
-      ▼
+      |
+      v
 Open-Meteo Geocoding
-      │
-      ▼
-Coordenadas geográficas
-(latitude / longitude)
+      |
+      v
+Latitude e longitude
 ```
 
-Essas coordenadas são importantes porque a consulta meteorológica da Open-Meteo utiliza latitude e longitude como referência para determinar as condições climáticas de uma localização.
-
 ### Clima
-
-A aplicação também possui:
 
 ```http
 GET /api/contexto/clima?cidade=São Paulo
 ```
 
-O fluxo é baseado na localização da cidade:
+O fluxo utiliza a localização obtida para realizar a consulta meteorológica:
 
 ```text
 Cidade
-  │
-  ▼
+  |
+  v
 Open-Meteo Geocoding
-  │
-  ▼
-Latitude + Longitude
-  │
-  ▼
+  |
+  v
+Latitude e longitude
+  |
+  v
 Open-Meteo Weather
-  │
-  ▼
+  |
+  v
 Dados meteorológicos
 ```
 
-A integração foi criada como uma fonte de contexto para o futuro motor de recomendação.
-
-Por exemplo, uma futura regra poderia considerar condições climáticas para aumentar ou diminuir a relevância de determinados produtos. Essa lógica, entretanto, **ainda não está implementada no score atual**.
+Essas informações poderão servir de base para regras futuras, como a priorização de produtos associados a determinadas condições climáticas. Essa lógica ainda não faz parte do score atual.
 
 ---
 
 ## BrasilAPI
 
-A **BrasilAPI** é utilizada no projeto para consultar informações relacionadas a feriados.
+A BrasilAPI é utilizada para consultar informações relacionadas a feriados.
 
-O endpoint disponível é:
+Consulta de feriados nacionais:
 
 ```http
 GET /api/contexto/feriados?ano=2026
 ```
 
-Também é possível informar uma UF:
+Consulta considerando uma unidade federativa:
 
 ```http
 GET /api/contexto/feriados?ano=2026&uf=SP
 ```
 
-A integração permite consultar:
+A integração permite consultar feriados nacionais e, quando uma UF é informada, feriados estaduais conforme os dados disponibilizados pela API.
 
-* feriados nacionais;
-* feriados estaduais quando uma UF é informada.
-
-O fluxo conceitual é:
+Fluxo conceitual:
 
 ```text
-Ano
- │
- ▼
-BrasilAPI
- │
- ├── Feriados nacionais
- │
- └── Feriados estaduais
-        │
-        ▼
-   Dados de contexto
+Ano e UF opcional
+        |
+        v
+    BrasilAPI
+        |
+        v
+Dados de feriados
+        |
+        v
+Dados de contexto
 ```
 
-Assim como acontece com os dados meteorológicos, os feriados ainda não interferem diretamente no cálculo do score.
-
-A intenção é utilizar essas informações futuramente como uma variável adicional nas regras de recomendação, permitindo considerar períodos específicos do calendário na seleção e priorização de produtos.
+Essas informações poderão ser utilizadas futuramente para considerar datas comemorativas, períodos específicos do calendário e sazonalidade nas recomendações.
 
 ---
 
-# APIs de contexto
+## APIs de contexto
 
-Atualmente, os endpoints relacionados às APIs externas são:
+Os endpoints relacionados às integrações externas são:
 
-| Endpoint                                        | Finalidade                                                                      |
-| ----------------------------------------------- | ------------------------------------------------------------------------------- |
-| `GET /api/contexto/localizacao?cidade={cidade}` | Consulta a localização de uma cidade através da Open-Meteo                      |
-| `GET /api/contexto/clima?cidade={cidade}`       | Consulta informações climáticas utilizando a localização obtida pela Open-Meteo |
-| `GET /api/contexto/feriados?ano={ano}`          | Consulta os feriados nacionais através da BrasilAPI                             |
-| `GET /api/contexto/feriados?ano={ano}&uf={UF}`  | Consulta feriados considerando também a UF informada                            |
+| Endpoint | Finalidade |
+|---|---|
+| `GET /api/contexto/localizacao?cidade={cidade}` | Consulta a localização de uma cidade utilizando a Open-Meteo. |
+| `GET /api/contexto/clima?cidade={cidade}` | Consulta informações climáticas com base na localização. |
+| `GET /api/contexto/feriados?ano={ano}` | Consulta feriados nacionais pela BrasilAPI. |
+| `GET /api/contexto/feriados?ano={ano}&uf={UF}` | Consulta feriados considerando a UF informada. |
 
-Esses endpoints funcionam como uma primeira camada de integração de **contexto externo** para o motor de recomendação.
+Esses endpoints compõem a camada de integração com dados externos da aplicação.
 
 ---
 
-# Visão da evolução do motor
+## Evolução do motor de recomendação
 
-A arquitetura atual foi pensada para permitir que o motor evolua de uma regra simples para um sistema capaz de combinar diferentes fatores.
-
-A ideia pode ser representada da seguinte forma:
+A arquitetura foi planejada para permitir que o motor evolua gradualmente, incorporando diferentes fatores na seleção e priorização de produtos.
 
 ```text
-                 Dados do cliente
-                       │
-                       ▼
-                Histórico de
-                  compras
-                       │
-                       │
-Dados de localização ──┤
-                       │
-Dados climáticos ──────┤
-                       │
-Dados de calendário ───┤
-                       │
-                       ▼
-              Regras de recomendação
-                       │
-                       ▼
-                  Cálculo do
-                     score
-                       │
-                       ▼
-             Produtos recomendados
+              Dados do cliente
+                    |
+                    v
+              Histórico de
+                compras
+                    |
+                    |
+Dados de localização
+                    |
+Dados climáticos
+                    |
+Dados de calendário
+                    |
+                    v
+          Regras de recomendação
+                    |
+                    v
+             Cálculo do score
+                    |
+                    v
+           Produtos recomendados
 ```
 
-O objetivo dessa estrutura é permitir que novas regras sejam adicionadas progressivamente.
+Entre os fatores que poderão ser considerados nas próximas etapas estão:
 
-Exemplos de fatores que poderão ser considerados no futuro:
+- Histórico de compras.
+- Perfil de consumo do cliente.
+- Localização.
+- Condições climáticas.
+- Período do ano.
+- Feriados.
+- Sazonalidade.
+- Combinação entre diferentes fatores.
 
-* histórico de compras;
-* perfil de consumo do cliente;
-* localização;
-* condições climáticas;
-* período do ano;
-* feriados;
-* sazonalidade;
-* combinação entre diferentes fatores.
-
-Esses fatores ainda fazem parte da evolução planejada do motor e **não representam regras implementadas no score atual**.
+Essas possibilidades fazem parte da evolução planejada. A utilização de cada variável no cálculo do score dependerá da definição e da validação das respectivas regras de negócio.
 
 ---
 
@@ -336,15 +363,20 @@ Para executar a aplicação localmente utilizando o Maven Wrapper:
 .\mvnw.cmd spring-boot:run
 ```
 
-Por padrão, o projeto possui configuração para utilizar um banco **H2 em memória** no ambiente inicial.
+Antes de iniciar a aplicação, verifique se:
 
-O Flyway executa as migrations durante a inicialização da aplicação.
+- O Java 21 está instalado e configurado.
+- As dependências do projeto podem ser resolvidas pelo Maven.
+- O banco de dados está acessível.
+- As configurações de conexão estão definidas corretamente nas propriedades da aplicação ou nas variáveis de ambiente utilizadas pelo projeto.
+
+A aplicação utiliza o banco de dados configurado, em vez de depender do banco H2 em memória descrito na estrutura inicial.
 
 ---
 
 ## Documentação da API
 
-A aplicação utiliza **Springdoc OpenAPI** para disponibilizar a documentação dos endpoints.
+A aplicação utiliza Springdoc OpenAPI para documentar os endpoints REST.
 
 Após iniciar a aplicação, a interface Swagger pode ser acessada em:
 
@@ -352,41 +384,47 @@ Após iniciar a aplicação, a interface Swagger pode ser acessada em:
 /swagger-ui.html
 ```
 
-Através dela é possível visualizar e testar os endpoints disponibilizados pela aplicação.
+Por meio dela, é possível visualizar e testar os endpoints disponibilizados pela aplicação, conforme as configurações do Springdoc.
 
 ---
 
 ## Status atual
 
-O projeto encontra-se em uma etapa inicial de desenvolvimento.
+O projeto encontra-se em desenvolvimento, com a estrutura inicial implementada e a integração com o banco de dados estabelecida.
 
 ### Implementado
 
-* Estrutura inicial da aplicação Spring Boot;
-* Java 21;
-* Persistência com Spring Data JPA;
-* Migrations com Flyway;
-* Suporte a H2 e PostgreSQL;
-* Endpoint de recomendações com ranking por histórico, complementos e promoção vigente;
-* Motivos do score retornados junto a cada produto;
-* Cadastro de clientes, produtos, compras e promoções para alimentar a recomendação;
-* Integração com Open-Meteo;
-* Consulta de localização;
-* Consulta de clima;
-* Integração com BrasilAPI;
-* Consulta de feriados nacionais e estaduais;
-* Documentação OpenAPI / Swagger.
+- Estrutura inicial da aplicação Spring Boot.
+- Desenvolvimento em Java 21.
+- Persistência com Spring Data JPA.
+- Integração com o banco de dados.
+- Controller de teste para consulta de clientes em JSON.
+- Endpoint de recomendações com ranking por histórico, produtos complementares e promoções vigentes, conforme a implementação V1 documentada.
+- Cadastro de clientes, produtos, compras e promoções.
+- Integração com Open-Meteo.
+- Consulta de localização.
+- Consulta de clima.
+- Integração com BrasilAPI.
+- Consulta de feriados nacionais e estaduais.
+- Documentação OpenAPI / Swagger.
+
+### Alterações recentes
+
+- Integração do banco de dados ao projeto.
+- Remoção do Flyway e de sua configuração de migrations.
+- Criação de uma controller de teste para retornar os dados dos clientes cadastrados em formato JSON.
 
 ### Próximas evoluções
 
-* Validar os pesos do score V1 com dados reais;
-* Definir relações justificadas entre clima, localização, calendário e categorias antes de usar esses dados no score;
-* Aprimorar a priorização e avaliar a qualidade das recomendações.
+- Validar os pesos do score V1 com dados reais.
+- Definir relações de negócio justificadas entre clima, localização, calendário e categorias de produtos.
+- Avaliar a qualidade das recomendações.
+- Aprimorar a priorização de produtos conforme o perfil e o contexto dos clientes.
 
 ---
 
 ## Objetivo
 
-O projeto serve como base para o desenvolvimento de um **motor de recomendação contextual**, capaz de combinar informações sobre clientes, produtos e fatores externos para gerar recomendações mais relevantes.
+O objetivo do projeto é desenvolver um **motor de recomendação contextual** capaz de combinar informações sobre clientes, produtos, histórico de compras e fatores externos para gerar recomendações mais relevantes.
 
-A arquitetura inicial prioriza uma base simples e evolutiva, permitindo que novas regras e fontes de dados sejam incorporadas conforme o desenvolvimento do projeto.
+A implementação atual estabelece uma base com persistência de dados, endpoints REST e integrações externas, permitindo evoluir progressivamente as regras de recomendação e as funcionalidades da aplicação.
