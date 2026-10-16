@@ -15,13 +15,6 @@ API REST de recomendação de produtos desenvolvida para o desafio Geração Cal
 - Springdoc OpenAPI / Swagger UI
 - Maven Wrapper
 
-## Executar localmente
-
-1. Instale e selecione o Java 21.
-2. Configure a conexão PostgreSQL localmente em `src/main/resources/application.properties` (`spring.datasource.url`, `spring.datasource.username` e `spring.datasource.password`). Não coloque valores reais de conexão neste README nem os publique no Git.
-3. Use um banco que já tenha as tabelas esperadas. O projeto está com `spring.jpa.hibernate.ddl-auto=none`: o Hibernate não cria nem altera tabelas.
-4. Na raiz do projeto, inicie a aplicação:
-
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
@@ -72,7 +65,7 @@ Todos os exemplos usam `Content-Type: application/json` nos métodos `POST`.
 
 | Método | Endpoint | Descrição |
 |---|---|---|
-| `GET` | `/api/clientes` | Lista até 50 clientes, sem expor CNPJ ou telefone. |
+| `GET` | `/api/clientes` | Lista até 50 clientes. |
 | `POST` | `/api/clientes` | Cadastra cliente. A cidade pode ser informada pelo ID ou pelo nome de uma cidade já existente. |
 
 Exemplo de cadastro:
@@ -279,11 +272,6 @@ Os limites, pesos e categorias de contexto podem ser ajustados em `application.p
 - **Open-Meteo:** busca a localização pelo nome da cidade e consulta o clima atual por coordenadas.
 - **BrasilAPI:** consulta feriados por ano e, opcionalmente, UF.
 
-As integrações precisam de acesso à internet. Falhas nas APIs externas não impedem a recomendação: o serviço registra um aviso e calcula o score sem o fator contextual indisponível.
-
-## Segurança e dados
-
-Este README não contém credenciais do banco, tokens ou dados reais de clientes. Mantenha as credenciais locais fora de arquivos publicados e nunca inclua valores sensíveis em exemplos, logs, commits ou documentação compartilhada. Os valores apresentados nos exemplos são fictícios e devem ser substituídos por registros de teste.
 
 ## Limitações e próximos passos
 
