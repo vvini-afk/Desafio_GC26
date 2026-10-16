@@ -9,6 +9,7 @@ import com.desafiogc.RecommedationEngine.model.pedido.Pedido;
 import com.desafiogc.RecommedationEngine.model.produto.Produto;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Promocao;
 import com.desafiogc.RecommedationEngine.repository.ClienteRepository;
+import com.desafiogc.RecommedationEngine.repository.CidadeRepository;
 import com.desafiogc.RecommedationEngine.repository.PedidoRepository;
 import com.desafiogc.RecommedationEngine.repository.ProdutoRepository;
 import com.desafiogc.RecommedationEngine.repository.PromocaoRepository;
@@ -22,20 +23,33 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class IngestaoDadosService {
     private final ClienteRepository clienteRepository;
+    private final CidadeRepository cidadeRepository;
     private final ProdutoRepository produtoRepository;
     private final PedidoRepository pedidoRepository;
     private final PromocaoRepository promocaoRepository;
 
     @Transactional
     public Cliente criarCliente(ClienteRequest request) {
+        var cidade = request.cidadeId() != null
+                ? cidadeRepository.findById(request.cidadeId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Cidade não encontrada: " + request.cidadeId()))
+                : request.cidade() == null || request.cidade().isBlank()
+                        ? null
+                        : cidadeRepository.findFirstByNomeIgnoreCaseOrderByIdAsc(request.cidade().trim())
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                        "Cidade não encontrada no cadastro do banco: " + request.cidade()));
         return clienteRepository.save(new Cliente(
-                request.nome().trim(), request.perfil(), request.cidade(), request.telefone(), request.ultimaCompra()
+                request.cnpj(), request.nome().trim(), request.perfil(), request.subsegmento(), request.cep(),
+                request.hierarquiaId(), cidade, request.telefone(),
+                request.ultimaCompra() == null ? null : request.ultimaCompra().atStartOfDay()
         ));
     }
 
     @Transactional
     public Produto criarProduto(ProdutoRequest request) {
-        Produto produto = produtoRepository.save(new Produto(request.nome().trim(), request.categoria().trim()));
+        Produto produto = produtoRepository.save(new Produto(request.nome().trim(), request.categoria().trim(),
+                request.precoBase(), request.precoMinimo()));
         for (Long complementarId : request.produtosComplementaresIds()) {
             if (!produtoRepository.existsById(complementarId)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -50,12 +64,12 @@ public class IngestaoDadosService {
     public Pedido criarPedido(PedidoRequest request) {
         Cliente cliente = clienteRepository.findById(request.clienteId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
-        Pedido pedido = new Pedido(cliente, request.dataCompra());
+        Pedido pedido = new Pedido(cliente, request.dataCompra().atStartOfDay());
         for (PedidoRequest.ItemRequest item : request.itens()) {
             Produto produto = produtoRepository.findById(item.produtoId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "Produto não encontrado: " + item.produtoId()));
-            pedido.adicionarItem(produto, item.quantidade());
+            pedido.adicionarItem(produto, item.quantidade(), item.valorUnitario());
         }
         return pedidoRepository.save(pedido);
     }
@@ -64,6 +78,10 @@ public class IngestaoDadosService {
     public Promocao criarPromocao(PromocaoRequest request) {
         if (request.produtoId() == null && (request.categoria() == null || request.categoria().isBlank())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe o produto ou a categoria da promoção.");
+        }
+        if (request.produtoId() != null && request.categoria() != null && !request.categoria().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe somente o produto ou a categoria da promoção.");
         }
         if (request.produtoId() != null && !produtoRepository.existsById(request.produtoId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto da promoção não encontrado.");

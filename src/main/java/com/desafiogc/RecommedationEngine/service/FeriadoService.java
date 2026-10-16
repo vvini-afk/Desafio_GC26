@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +22,7 @@ public class FeriadoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "O ano deve estar entre 1900 e 2199.");
         }
-        String ufNormalizada = uf == null || uf.isBlank() ? null : uf.trim().toUpperCase();
+        String ufNormalizada = uf == null || uf.isBlank() ? null : uf.trim().toUpperCase(Locale.ROOT);
         if (ufNormalizada != null && !ufNormalizada.matches("[A-Z]{2}")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "A UF deve conter exatamente duas letras, por exemplo SP.");

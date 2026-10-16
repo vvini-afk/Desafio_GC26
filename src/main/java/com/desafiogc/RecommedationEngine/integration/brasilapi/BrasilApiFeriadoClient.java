@@ -23,9 +23,9 @@ public class BrasilApiFeriadoClient {
 
     public List<FeriadoBrasilApiDTO> listarFeriados(int ano, String uf) {
         try {
-            return restClient.get()
+            List<FeriadoBrasilApiDTO> feriados = restClient.get()
                     .uri(uriBuilder -> {
-                        var builder = uriBuilder.path("/feriados/v1/{ano}");
+                        var builder = uriBuilder.path("/api/feriados/v1/{ano}");
                         if (uf != null && !uf.isBlank()) {
                             builder.queryParam("uf", uf);
                         }
@@ -33,6 +33,7 @@ public class BrasilApiFeriadoClient {
                     })
                     .retrieve()
                     .body(new org.springframework.core.ParameterizedTypeReference<List<FeriadoBrasilApiDTO>>() {});
+            return feriados == null ? List.of() : feriados;
         } catch (RestClientException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "Falha ao consultar feriados na BrasilAPI.", exception);

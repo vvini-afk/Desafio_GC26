@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "promocao")
@@ -16,6 +17,7 @@ public class Promocao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_promocao")
     private Long id;
 
     @Column(nullable = false)
@@ -33,10 +35,10 @@ public class Promocao {
     private BigDecimal valorDesconto;
 
     @Column(nullable = false)
-    private LocalDate inicio;
+    private LocalDateTime inicio;
 
     @Column(nullable = false)
-    private LocalDate fim;
+    private LocalDateTime fim;
 
     @Column(nullable = false)
     private boolean ativa;
@@ -58,16 +60,16 @@ public class Promocao {
         this.categoria = categoria;
         this.tipoDesconto = tipoDesconto;
         this.valorDesconto = valorDesconto;
-        this.inicio = inicio;
-        this.fim = fim;
+        this.inicio = inicio.atStartOfDay();
+        this.fim = fim.atTime(23, 59, 59, 999_999_999);
         this.ativa = true;
     }
 
     public boolean vigente(LocalDate hoje) {
         return ativa
                 && hoje != null
-                && !hoje.isBefore(inicio)
-                && !hoje.isAfter(fim);
+                && !hoje.isBefore(inicio.toLocalDate())
+                && !hoje.isAfter(fim.toLocalDate());
     }
 
     public void desativar() {

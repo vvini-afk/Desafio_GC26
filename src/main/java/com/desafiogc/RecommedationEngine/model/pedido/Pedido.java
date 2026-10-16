@@ -7,7 +7,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,14 +20,15 @@ public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_pedido")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @JoinColumn(name = "id_cliente", referencedColumnName = "id_cliente", nullable = false)
     private Cliente cliente;
 
-    @Column(name = "data_compra", nullable = false)
-    private LocalDate dataCompra;
+    @Column(name = "data_pedido", nullable = false)
+    private LocalDateTime dataCompra;
 
     @OneToMany(
             mappedBy = "pedido",
@@ -35,7 +37,7 @@ public class Pedido {
     )
     private List<ItemPedido> itens = new ArrayList<>();
 
-    public Pedido(Cliente cliente, LocalDate dataCompra) {
+    public Pedido(Cliente cliente, LocalDateTime dataCompra) {
         if (cliente == null || dataCompra == null) {
             throw new IllegalArgumentException("Cliente e data de compra são obrigatórios.");
         }
@@ -45,7 +47,7 @@ public class Pedido {
         cliente.registrarPedido(this);
     }
 
-    public void adicionarItem(Produto produto, int quantidade) {
+    public void adicionarItem(Produto produto, int quantidade, BigDecimal valorUnitario) {
         if (produto == null) {
             throw new IllegalArgumentException("O produto é obrigatório.");
         }
@@ -53,6 +55,6 @@ public class Pedido {
             throw new IllegalArgumentException("A quantidade deve ser maior que zero.");
         }
 
-        itens.add(new ItemPedido(this, produto, quantidade));
+        itens.add(new ItemPedido(this, produto, quantidade, valorUnitario));
     }
 }

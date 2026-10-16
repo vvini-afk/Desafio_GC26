@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -18,8 +19,11 @@ public class RecomendacaoController {
     private final MotorRecomendacaoService motorRecomendacaoService;
 
     @GetMapping("/{clienteId}")
-    public ResponseEntity<List<RecomendacaoDTO>> recomendar(@PathVariable Long clienteId) {
-        return ResponseEntity.ok(motorRecomendacaoService.recomendar(clienteId).stream()
+    public ResponseEntity<List<RecomendacaoDTO>> recomendar(
+            @PathVariable Long clienteId,
+            @RequestParam(required = false) String cidade
+    ) {
+        return ResponseEntity.ok(motorRecomendacaoService.recomendar(clienteId, cidade).stream()
                 .map(RecomendacaoDTO::from)
                 .toList());
     }

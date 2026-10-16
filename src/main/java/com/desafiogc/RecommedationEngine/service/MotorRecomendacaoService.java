@@ -1,6 +1,7 @@
 package com.desafiogc.RecommedationEngine.service;
 
 import com.desafiogc.RecommedationEngine.model.pedido.Pedido;
+import com.desafiogc.RecommedationEngine.model.contexto.ContextoRecomendacao;
 import com.desafiogc.RecommedationEngine.model.produto.Produto;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Promocao;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
@@ -11,10 +12,10 @@ import com.desafiogc.RecommedationEngine.repository.PromocaoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -36,16 +37,21 @@ public class MotorRecomendacaoService {
     private final ProdutoRepository produtoRepository;
     private final PedidoRepository pedidoRepository;
     private final PromocaoRepository promocaoRepository;
+    private final ContextoRecomendacaoService contextoRecomendacaoService;
 
-    @Transactional(readOnly = true)
-    public List<Recomendacao> recomendar(Long clienteId) {
-        clienteRepository.findById(clienteId)
+    public List<Recomendacao> recomendar(Long clienteId, String cidadeOverride) {
+        var cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
+
+        String cidade = cidadeOverride == null || cidadeOverride.isBlank()
+                ? cliente.getCidade()
+                : cidadeOverride.trim();
+        ContextoRecomendacao contexto = contextoRecomendacaoService.consultar(cidade);
 
         List<Pedido> historico = pedidoRepository.findByCliente_Id(clienteId);
         Map<String, Long> comprasPorCategoria = historico.stream()
                 .flatMap(pedido -> pedido.getItens().stream())
-                .collect(Collectors.groupingBy(item -> item.getProduto().getCategoria().toLowerCase(Locale.ROOT), Collectors.counting()));
+                .collect(Collectors.groupingBy(item -> normalizarCategoria(item.getProduto().getCategoria()), Collectors.counting()));
         Set<Long> produtosComprados = historico.stream()
                 .flatMap(pedido -> pedido.getItens().stream())
                 .map(item -> item.getProduto().getId())
@@ -55,39 +61,59 @@ public class MotorRecomendacaoService {
                 .toList();
 
         return produtoRepository.findByAtivoTrueOrderByIdAsc().stream()
-                .map(produto -> pontuar(produto, comprasPorCategoria, produtosComprados, promocoesVigentes))
+                .map(produto -> pontuar(produto, comprasPorCategoria, produtosComprados, promocoesVigentes, contexto))
                 .sorted(Comparator.comparingDouble(Recomendacao::score).reversed()
                         .thenComparing(recomendacao -> recomendacao.produto().getId()))
                 .toList();
     }
 
     private Recomendacao pontuar(Produto produto, Map<String, Long> comprasPorCategoria,
-                                    Set<Long> produtosComprados, List<Promocao> promocoes) {
+                                 Set<Long> produtosComprados, List<Promocao> promocoes,
+                                 ContextoRecomendacao contexto) {
         double score = SCORE_BASE;
         List<String> motivos = new ArrayList<>();
-        long frequenciaCategoria = comprasPorCategoria.getOrDefault(produto.getCategoria().toLowerCase(Locale.ROOT), 0L);
+        boolean temSinalDeRecomendacao = false;
+        long frequenciaCategoria = comprasPorCategoria.getOrDefault(normalizarCategoria(produto.getCategoria()), 0L);
         if (frequenciaCategoria > 0) {
             int pontos = (int) Math.min(LIMITE_PONTOS_CATEGORIA,
                     frequenciaCategoria * PONTOS_POR_ITEM_DA_CATEGORIA);
             score += pontos;
+            temSinalDeRecomendacao = true;
             motivos.add("Categoria " + produto.getCategoria() + " presente no histórico (" + frequenciaCategoria + " item(ns), +" + pontos + ")");
         }
         boolean complementar = produto.getComplementaresIds().stream().anyMatch(produtosComprados::contains);
         if (complementar) {
             score += PONTOS_COMPLEMENTAR;
+            temSinalDeRecomendacao = true;
             motivos.add("Complementar a um produto já comprado (+20)");
         }
         Promocao promocao = promocoes.stream()
-                .filter(p -> produto.getId().equals(p.getProdutoId())
-                        || (p.getCategoria() != null && produto.getCategoria().equalsIgnoreCase(p.getCategoria())))
+                .filter(p -> p.getProdutoId() != null
+                        ? produto.getId().equals(p.getProdutoId())
+                        : p.getCategoria() != null
+                                && normalizarCategoria(produto.getCategoria()).equals(normalizarCategoria(p.getCategoria())))
+                .sorted(Comparator.comparing((Promocao p) -> p.getProdutoId() == null)
+                        .thenComparing(Promocao::getId))
                 .findFirst().orElse(null);
         if (promocao != null) {
             score += PONTOS_PROMOCAO;
+            temSinalDeRecomendacao = true;
             motivos.add("Promoção vigente: " + promocao.getNome() + " (+15)");
         }
-        if (motivos.isEmpty()) {
-            motivos.add("Produto ativo; sem sinais de preferência ou promoção (+10)");
+        PontuacaoContextual pontuacaoContextual = contextoRecomendacaoService.pontuar(produto, contexto);
+        score += pontuacaoContextual.pontos();
+        motivos.addAll(pontuacaoContextual.motivos());
+        temSinalDeRecomendacao |= pontuacaoContextual.pontos() > 0;
+        if (!temSinalDeRecomendacao) {
+            motivos.add("Produto ativo; sem fatores de preferência ou contexto aplicáveis (+10)");
         }
         return new Recomendacao(produto, score, motivos, promocao);
+    }
+
+    private static String normalizarCategoria(String categoria) {
+        return Normalizer.normalize(categoria == null ? "" : categoria, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .trim()
+                .toLowerCase(Locale.ROOT);
     }
 }

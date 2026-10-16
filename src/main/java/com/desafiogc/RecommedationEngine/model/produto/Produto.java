@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,28 +17,41 @@ public class Produto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_item")
     private Long id;
 
     @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false)
+    @Column(name = "cod_familia", nullable = false)
     private String categoria;
+
+    @Column(name = "preco_base")
+    private BigDecimal precoBase;
+
+    @Column(name = "preco_minimo")
+    private BigDecimal precoMinimo;
 
     @Column(nullable = false)
     private boolean ativo = true;
 
     @ElementCollection
     @CollectionTable(
-            name = "produtos_complementares",
-            joinColumns = @JoinColumn(name = "produto_id")
+            name = "produto_complementar",
+            joinColumns = @JoinColumn(name = "produto_id", referencedColumnName = "id_item")
     )
-    @Column(name = "produto_complementar_id", nullable = false)
+    @Column(name = "complementar_id", nullable = false)
     private List<Long> complementaresIds = new ArrayList<>();
 
     public Produto(String nome, String categoria) {
         this.nome = nome;
         this.categoria = categoria;
+    }
+
+    public Produto(String nome, String categoria, BigDecimal precoBase, BigDecimal precoMinimo) {
+        this(nome, categoria);
+        this.precoBase = precoBase;
+        this.precoMinimo = precoMinimo;
     }
 
     public void desativar() {

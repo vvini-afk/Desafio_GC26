@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 public record PedidoRequest(
@@ -13,6 +14,6 @@ public record PedidoRequest(
         @NotNull LocalDate dataCompra,
         @NotEmpty List<@Valid ItemRequest> itens
 ) {
-    public record ItemRequest(@NotNull Long produtoId, @Positive int quantidade) {
+    public record ItemRequest(@NotNull Long produtoId, @Positive int quantidade, BigDecimal valorUnitario) {
     }
 }

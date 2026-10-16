@@ -22,6 +22,7 @@ public class Notificacao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_notificacao")
     private Long id;
 
     @Column(name = "cliente_id", nullable = false)
@@ -31,7 +32,7 @@ public class Notificacao {
     @Column(nullable = false)
     private TipoNotificacao tipo;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, columnDefinition = "text")
     private String mensagem;
 
     @Enumerated(EnumType.STRING)
