@@ -20,7 +20,7 @@ public class RecomendacaoController {
 
     @GetMapping("/{clienteId}")
     public ResponseEntity<List<RecomendacaoDTO>> recomendar(
-            @PathVariable Long clienteId,
+            @PathVariable Integer clienteId,
             @RequestParam(required = false) String cidade
     ) {
         return ResponseEntity.ok(motorRecomendacaoService.recomendar(clienteId, cidade).stream()

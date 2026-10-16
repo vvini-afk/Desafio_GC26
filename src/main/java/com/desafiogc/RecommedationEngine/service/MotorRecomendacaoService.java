@@ -39,7 +39,7 @@ public class MotorRecomendacaoService {
     private final PromocaoRepository promocaoRepository;
     private final ContextoRecomendacaoService contextoRecomendacaoService;
 
-    public List<Recomendacao> recomendar(Long clienteId, String cidadeOverride) {
+    public List<Recomendacao> recomendar(Integer clienteId, String cidadeOverride) {
         var cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente não encontrado."));
 
@@ -52,7 +52,7 @@ public class MotorRecomendacaoService {
         Map<String, Long> comprasPorCategoria = historico.stream()
                 .flatMap(pedido -> pedido.getItens().stream())
                 .collect(Collectors.groupingBy(item -> normalizarCategoria(item.getProduto().getCategoria()), Collectors.counting()));
-        Set<Long> produtosComprados = historico.stream()
+        Set<Integer> produtosComprados = historico.stream()
                 .flatMap(pedido -> pedido.getItens().stream())
                 .map(item -> item.getProduto().getId())
                 .collect(Collectors.toSet());
@@ -68,7 +68,7 @@ public class MotorRecomendacaoService {
     }
 
     private Recomendacao pontuar(Produto produto, Map<String, Long> comprasPorCategoria,
-                                 Set<Long> produtosComprados, List<Promocao> promocoes,
+                                 Set<Integer> produtosComprados, List<Promocao> promocoes,
                                  ContextoRecomendacao contexto) {
         double score = SCORE_BASE;
         List<String> motivos = new ArrayList<>();

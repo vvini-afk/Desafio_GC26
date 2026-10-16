@@ -5,7 +5,7 @@ import com.desafiogc.RecommedationEngine.model.cliente.Cliente;
 import java.time.LocalDate;
 
 public record ClienteResumoDTO(
-        Long id,
+        Integer id,
         String nome,
         String perfil,
         String cidade,

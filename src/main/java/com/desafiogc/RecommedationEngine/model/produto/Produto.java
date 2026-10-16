@@ -18,22 +18,22 @@ public class Produto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_item")
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false)
     private String nome;
 
-    @Column(name = "cod_familia", nullable = false)
+    @Column(name = "cod_familia")
     private String categoria;
 
-    @Column(name = "preco_base")
+    @Column(name = "preco_base", nullable = false)
     private BigDecimal precoBase;
 
-    @Column(name = "preco_minimo")
+    @Column(name = "preco_minimo", nullable = false)
     private BigDecimal precoMinimo;
 
-    @Column(nullable = false)
-    private boolean ativo = true;
+    @Column
+    private Boolean ativo = true;
 
     @ElementCollection
     @CollectionTable(
@@ -41,7 +41,7 @@ public class Produto {
             joinColumns = @JoinColumn(name = "produto_id", referencedColumnName = "id_item")
     )
     @Column(name = "complementar_id", nullable = false)
-    private List<Long> complementaresIds = new ArrayList<>();
+    private List<Integer> complementaresIds = new ArrayList<>();
 
     public Produto(String nome, String categoria) {
         this.nome = nome;
@@ -62,7 +62,7 @@ public class Produto {
         this.ativo = true;
     }
 
-    public void adicionarComplementar(Long produtoId) {
+    public void adicionarComplementar(Integer produtoId) {
         if (produtoId == null || produtoId.equals(this.id)) {
             throw new IllegalArgumentException(
                     "O produto complementar precisa ter um ID válido e ser diferente deste produto."

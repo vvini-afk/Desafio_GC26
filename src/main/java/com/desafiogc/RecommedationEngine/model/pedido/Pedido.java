@@ -21,10 +21,10 @@ public class Pedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_pedido")
-    private Long id;
+    private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_cliente", referencedColumnName = "id_cliente", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_cliente", referencedColumnName = "id_cliente")
     private Cliente cliente;
 
     @Column(name = "data_pedido", nullable = false)

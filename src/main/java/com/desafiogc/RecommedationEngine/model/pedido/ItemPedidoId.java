@@ -13,6 +13,6 @@ import java.io.Serializable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode
 public class ItemPedidoId implements Serializable {
-    private Long pedidoId;
-    private Long produtoId;
+    private Integer pedidoId;
+    private Integer produtoId;
 }

@@ -5,12 +5,12 @@ import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 import java.util.List;
 
 public record RecomendacaoDTO(
-        Long produtoId,
+        Integer produtoId,
         String nomeProduto,
         String categoria,
         double score,
         List<String> motivos,
-        Long promocaoId
+        Integer promocaoId
 ) {
     public RecomendacaoDTO {
         motivos = motivos == null ? List.of() : List.copyOf(motivos);

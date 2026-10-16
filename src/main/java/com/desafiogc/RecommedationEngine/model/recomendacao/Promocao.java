@@ -18,12 +18,12 @@ public class Promocao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_promocao")
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false)
     private String nome;
 
-    private Long produtoId;
+    private Integer produtoId;
 
     private String categoria;
 
@@ -31,7 +31,7 @@ public class Promocao {
     @Column(nullable = false)
     private TipoDesconto tipoDesconto;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(nullable = false)
     private BigDecimal valorDesconto;
 
     @Column(nullable = false)
@@ -40,12 +40,11 @@ public class Promocao {
     @Column(nullable = false)
     private LocalDateTime fim;
 
-    @Column(nullable = false)
-    private boolean ativa;
+    private Boolean ativa;
 
     public Promocao(
             String nome,
-            Long produtoId,
+            Integer produtoId,
             String categoria,
             TipoDesconto tipoDesconto,
             BigDecimal valorDesconto,
@@ -66,7 +65,7 @@ public class Promocao {
     }
 
     public boolean vigente(LocalDate hoje) {
-        return ativa
+        return Boolean.TRUE.equals(ativa)
                 && hoje != null
                 && !hoje.isBefore(inicio.toLocalDate())
                 && !hoje.isAfter(fim.toLocalDate());

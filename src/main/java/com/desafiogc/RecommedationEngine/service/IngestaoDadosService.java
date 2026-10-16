@@ -50,7 +50,7 @@ public class IngestaoDadosService {
     public Produto criarProduto(ProdutoRequest request) {
         Produto produto = produtoRepository.save(new Produto(request.nome().trim(), request.categoria().trim(),
                 request.precoBase(), request.precoMinimo()));
-        for (Long complementarId : request.produtosComplementaresIds()) {
+        for (Integer complementarId : request.produtosComplementaresIds()) {
             if (!produtoRepository.existsById(complementarId)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Produto complementar não encontrado: " + complementarId);

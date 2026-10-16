@@ -44,7 +44,7 @@ public class IngestaoController {
         return criado("promocoes", promocao.getId(), "Promoção cadastrada.");
     }
 
-    private ResponseEntity<RegistroDTO> criado(String tipo, Long id, String mensagem) {
+    private ResponseEntity<RegistroDTO> criado(String tipo, Integer id, String mensagem) {
         return ResponseEntity.status(HttpStatus.CREATED).body(new RegistroDTO(id, tipo, mensagem));
     }
 }

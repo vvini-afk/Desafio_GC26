@@ -11,11 +11,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +31,7 @@ public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_cliente")
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false)
     private String nome;
@@ -40,10 +42,11 @@ public class Cliente {
     @Column(name = "subsegmento")
     private String subsegmento;
 
-    @Column(name = "cnpj")
+    @Column(name = "cnpj", unique = true)
     private String cnpj;
 
-    @Column(name = "cep")
+    @JdbcTypeCode(Types.CHAR)
+    @Column(name = "cep", length = 8)
     private String cep;
 
     @Column(name = "id_hierarquia")

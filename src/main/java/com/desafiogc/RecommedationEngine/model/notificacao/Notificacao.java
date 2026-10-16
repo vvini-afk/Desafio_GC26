@@ -23,31 +23,28 @@ public class Notificacao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_notificacao")
-    private Long id;
+    private Integer id;
 
-    @Column(name = "cliente_id", nullable = false)
-    private Long clienteId;
+    @Column(name = "cliente_id")
+    private Integer clienteId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private TipoNotificacao tipo;
 
     @Column(nullable = false, columnDefinition = "text")
     private String mensagem;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Canal canal;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private StatusEnvio status;
 
-    @Column(name = "criada_em", nullable = false)
+    @Column(name = "criada_em")
     private LocalDateTime criadaEm;
 
     public Notificacao(
-            Long clienteId,
+            Integer clienteId,
             TipoNotificacao tipo,
             String mensagem,
             Canal canal,

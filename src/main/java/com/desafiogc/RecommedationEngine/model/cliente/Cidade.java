@@ -6,9 +6,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.sql.Types;
 
 @Entity
 @Table(name = "cidade")
@@ -24,5 +27,7 @@ public class Cidade {
     @Column(nullable = false)
     private String nome;
 
+    @JdbcTypeCode(Types.CHAR)
+    @Column(length = 2, nullable = false)
     private String uf;
 }

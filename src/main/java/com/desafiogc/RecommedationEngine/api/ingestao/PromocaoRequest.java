@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 public record PromocaoRequest(
         @NotBlank String nome,
-        Long produtoId,
+        Integer produtoId,
         String categoria,
         @NotNull TipoDesconto tipoDesconto,
         @NotNull @DecimalMin(value = "0.01") BigDecimal valorDesconto,

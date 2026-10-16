@@ -1,4 +1,4 @@
 package com.desafiogc.RecommedationEngine.api.ingestao;
 
-public record RegistroDTO(Long id, String tipo, String mensagem) {
+public record RegistroDTO(Integer id, String tipo, String mensagem) {
 }

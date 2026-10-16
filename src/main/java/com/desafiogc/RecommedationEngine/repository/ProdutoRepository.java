@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ProdutoRepository extends JpaRepository<Produto, Long> {
+public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
 
     @EntityGraph(attributePaths = "complementaresIds")
     List<Produto> findByAtivoTrueOrderByIdAsc();
