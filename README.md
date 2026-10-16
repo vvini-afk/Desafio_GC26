@@ -2,7 +2,6 @@
 
 API REST de recomendação de produtos desenvolvida para o desafio Geração Caldeira. O motor combina dados de clientes, catálogo, histórico de compras, promoções e contexto externo (clima e feriados) para ordenar produtos ativos por uma pontuação explicável.
 
-> Os exemplos deste documento usam dados fictícios. Substitua os IDs pelos registros existentes no seu banco.
 
 ## Tecnologias
 
@@ -14,6 +13,8 @@ API REST de recomendação de produtos desenvolvida para o desafio Geração Cal
 - Lombok
 - Springdoc OpenAPI / Swagger UI
 - Maven Wrapper
+
+## Executar localmente
 
 ```powershell
 .\mvnw.cmd spring-boot:run
@@ -56,6 +57,14 @@ A propriedade `categoria` do modelo de produto corresponde à coluna `cod_famili
 Os itens do pedido são mapeados com chave composta `(pedido_id, produto_id)`, pois a tabela informada não possui uma coluna de identificador própria. Isso pressupõe no máximo uma linha por produto em cada pedido.
 
 As tabelas `estoque_erp` e outros campos do banco que não aparecem na lista de mapeamentos ainda não participam da lógica atual do recomendador.
+
+### Versionamento com Flyway
+
+As migrations SQL versionadas ficam em `src/main/resources/db/migration` e seguem o padrão `V<versão>__<descrição>.sql`. A migration `V1__criar_esquema_inicial.sql` cria as tabelas acima quando a aplicação inicia contra um schema `public` vazio.
+
+No primeiro início contra o banco Supabase já existente, o Flyway cria `flyway_schema_history` e registra o schema atual como baseline na versão `1`. Esse baseline não reaplica a V1 e não recria nem apaga as tabelas existentes. O Hibernate valida o mapeamento com `spring.jpa.hibernate.ddl-auto=validate`. Depois desse baseline, novas alterações devem ser adicionadas em migrations novas, como `V2__descricao_da_alteracao.sql`; migrations já aplicadas não devem ser editadas.
+
+O usuário PostgreSQL configurado para a aplicação precisa ter permissão para criar a tabela `flyway_schema_history` no schema `public` e executar as migrations futuras. O Flyway usa o mesmo datasource configurado para o Spring.
 
 ## Endpoints
 
@@ -272,6 +281,7 @@ Os limites, pesos e categorias de contexto podem ser ajustados em `application.p
 - **Open-Meteo:** busca a localização pelo nome da cidade e consulta o clima atual por coordenadas.
 - **BrasilAPI:** consulta feriados por ano e, opcionalmente, UF.
 
+As integrações precisam de acesso à internet. Falhas nas APIs externas não impedem a recomendação: o serviço registra um aviso e calcula o score sem o fator contextual indisponível.
 
 ## Limitações e próximos passos
 
