@@ -1,170 +1,156 @@
 # Motor de Recomendação
 
-Projeto desenvolvido para o desafio do **Geração Caldeira**, com o objetivo de construir a base de um motor de recomendação de produtos.
+API REST de recomendação de produtos desenvolvida para o desafio Geração Caldeira. O motor combina dados de clientes, catálogo, histórico de compras, promoções e contexto externo (clima e feriados) para ordenar produtos ativos por uma pontuação explicável.
 
-A aplicação utiliza **Java 21**, **Spring Boot 4.1.1**, **Spring Data JPA** e **PostgreSQL** para persistência dos dados.
+> Os exemplos deste documento usam dados fictícios. Substitua os IDs pelos registros existentes no seu banco.
 
-O projeto evoluiu da estrutura inicial para uma aplicação conectada a um banco de dados real. Também foi criada uma controller de teste para consultar os clientes cadastrados e retornar seus dados em formato JSON, permitindo validar a comunicação entre a aplicação e o banco.
+## Tecnologias
 
-A arquitetura está preparada para a evolução das regras de recomendação, combinando informações de clientes, produtos e histórico de compras com dados de contexto, como localização, clima e feriados.
+- Java 21
+- Spring Boot 4.1.1
+- Spring Web MVC e Spring Data JPA
+- PostgreSQL
+- Bean Validation
+- Lombok
+- Springdoc OpenAPI / Swagger UI
+- Maven Wrapper
 
----
+## Executar localmente
 
-## Tecnologias utilizadas
+1. Instale e selecione o Java 21.
+2. Configure a conexão PostgreSQL localmente em `src/main/resources/application.properties` (`spring.datasource.url`, `spring.datasource.username` e `spring.datasource.password`). Não coloque valores reais de conexão neste README nem os publique no Git.
+3. Use um banco que já tenha as tabelas esperadas. O projeto está com `spring.jpa.hibernate.ddl-auto=none`: o Hibernate não cria nem altera tabelas.
+4. Na raiz do projeto, inicie a aplicação:
 
-- **Java 21** — linguagem principal do projeto.
-- **Spring Boot 4.1.1** — framework para construção da aplicação.
-- **Spring Web MVC** — criação dos endpoints REST.
-- **Spring Data JPA** — persistência e acesso aos dados.
-- **PostgreSQL** — banco de dados utilizado pela aplicação.
-- **Bean Validation** — validação dos dados recebidos pela aplicação.
-- **Lombok** — redução de código repetitivo nas classes Java.
-- **Springdoc OpenAPI / Swagger UI** — documentação e exploração dos endpoints REST.
-- **Maven** — gerenciamento de dependências e build do projeto.
+```powershell
+.\mvnw.cmd spring-boot:run
+```
 
-As dependências e versões utilizadas estão definidas no `pom.xml`.
+Por padrão, a API fica disponível em `http://localhost:8080`. O Swagger UI fica em `http://localhost:8080/swagger-ui.html`.
 
-O projeto utiliza o Spring Data JPA para realizar as operações de persistência. O Flyway, utilizado na estrutura inicial, foi removido após a integração com o banco de dados.
-
----
-
-## Arquitetura da aplicação
-
-A aplicação utiliza uma arquitetura baseada na separação de responsabilidades proporcionada pelo Spring.
-
-O fluxo de comunicação entre as principais camadas pode ser representado da seguinte maneira:
+## Estrutura da aplicação
 
 ```text
-                 Cliente HTTP / REST
-                         |
-                         v
-                    Controller
-                         |
-                         v
-                      Service
-                         |
-             +-----------+-----------+
-             |                       |
-             v                       v
-         Repository             APIs externas
-       Spring Data JPA       Open-Meteo / BrasilAPI
-             |
-             v
-        Banco de dados
-         PostgreSQL
+src/main/java/com/desafiogc/RecommedationEngine/
+├── api/                 # Controllers REST e DTOs de entrada/saída
+├── config/              # Configuração de clientes HTTP
+├── integration/         # Clientes Open-Meteo e BrasilAPI
+├── model/               # Entidades e modelos de domínio
+├── repository/          # Repositórios Spring Data JPA
+└── service/             # Ingestão, contexto, calendário e recomendação
 ```
 
-### Responsabilidades das camadas
+Fluxo principal: Controller → Service → Repository/JPA → PostgreSQL. Para recomendações, o serviço também consulta Open-Meteo e BrasilAPI.
 
-- **Controller:** recebe as requisições HTTP e disponibiliza os endpoints da API.
-- **Service:** concentra as regras de negócio e a lógica da aplicação.
-- **Repository:** realiza o acesso aos dados utilizando o Spring Data JPA.
-- **Banco de dados:** armazena os dados persistentes utilizados pela aplicação.
-- **APIs externas:** fornecem informações complementares de localização, clima e calendário.
+## Banco de dados
 
-Essa organização facilita a manutenção do código e permite adicionar novas funcionalidades sem concentrar todas as responsabilidades em uma única classe.
+O projeto espera as tabelas já criadas no schema `public`. O mapeamento atual usa estes nomes:
 
----
+| Tabela | Colunas usadas pela aplicação |
+|---|---|
+| `cliente` | `id_cliente`, `cnpj`, `nome`, `segmento`, `subsegmento`, `numero_celular`, `cep`, `ultima_compra`, `id_hierarquia`, `id_cidade` |
+| `cidade` | `id_cidade`, `nome`, `uf` |
+| `hierarquia` | `id_hierarquia` (referência armazenada no cliente) |
+| `produto` | `id_item`, `nome`, `cod_familia`, `preco_base`, `preco_minimo`, `ativo` |
+| `produto_complementar` | `produto_id`, `complementar_id` |
+| `pedido` | `id_pedido`, `data_pedido`, `id_cliente` |
+| `item_pedido` | `pedido_id`, `produto_id`, `quantidade`, `valor_unitario` |
+| `promocao` | `id_promocao`, `nome`, `produto_id`, `categoria`, `tipo_desconto`, `valor_desconto`, `inicio`, `fim`, `ativa` |
+| `notificacao` | `id_notificacao`, `cliente_id`, `tipo`, `mensagem`, `canal`, `status`, `criada_em` |
 
-## Persistência de dados
+A propriedade `categoria` do modelo de produto corresponde à coluna `cod_familia`. A cidade do cliente é obtida pela relação `cliente.id_cidade` → `cidade.id_cidade`; a API de recomendação usa o nome da cidade para consultar o clima.
 
-O projeto utiliza **PostgreSQL hospedado no Supabase**, integrado à aplicação por meio do Spring Data JPA.
+Os itens do pedido são mapeados com chave composta `(pedido_id, produto_id)`, pois a tabela informada não possui uma coluna de identificador própria. Isso pressupõe no máximo uma linha por produto em cada pedido.
 
-As entidades Java representam os dados manipulados pela aplicação, enquanto os repositórios realizam as operações de consulta e persistência.
+As tabelas `estoque_erp` e outros campos do banco que não aparecem na lista de mapeamentos ainda não participam da lógica atual do recomendador.
 
-Após a integração com o banco de dados, o Flyway foi removido do projeto. A aplicação passou a utilizar a conexão com o PostgreSQL do Supabase para acessar os dados persistidos.
+## Endpoints
 
-As configurações de conexão devem ser definidas de acordo com as propriedades utilizadas pelo projeto. As credenciais do banco de dados não devem ser armazenadas diretamente no código-fonte nem enviadas ao GitHub.
+Todos os exemplos usam `Content-Type: application/json` nos métodos `POST`.
 
-### Consulta de clientes
+### Clientes
 
-Foi criada uma controller de teste para validar a comunicação entre a aplicação Spring Boot e o banco de dados.
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/clientes` | Lista até 50 clientes, sem expor CNPJ ou telefone. |
+| `POST` | `/api/clientes` | Cadastra cliente. A cidade pode ser informada pelo ID ou pelo nome de uma cidade já existente. |
 
-**Endpoint disponível:**
+Exemplo de cadastro:
 
 ```http
-GET http://localhost:8080/teste/cliente
+POST http://localhost:8080/api/clientes
+Content-Type: application/json
 ```
 
-A requisição consulta os clientes armazenados no banco de dados do Supabase e retorna os dados em formato JSON.
-
-Essa implementação permite verificar se a aplicação consegue recuperar os registros por meio da camada de persistência e disponibilizá-los através de uma API REST.
-
-O endpoint tem finalidade de teste e validação da integração com o banco de dados.
-
-### Consulta de clientes
-
-Foi criada uma controller de teste para verificar a integração entre a API e o banco de dados.
-
-Essa funcionalidade permite consultar os clientes cadastrados e retornar os registros em formato JSON, facilitando a validação dos dados recuperados pela aplicação.
-
-O fluxo da consulta é:
-
-```text
-Requisição HTTP
-      |
-      v
-Controller de teste
-      |
-      v
-Repository JPA
-      |
-      v
-Banco de dados
-      |
-      v
-Lista de clientes
-      |
-      v
-Resposta JSON
+```json
+{
+  "cnpj": "CNPJ_DE_TESTE",
+  "nome": "Cliente Exemplo",
+  "perfil": "Varejo",
+  "subsegmento": "Mercado",
+  "cep": "00000000",
+  "hierarquiaId": 1,
+  "cidadeId": 1,
+  "telefone": "TELEFONE_DE_TESTE",
+  "ultimaCompra": "2026-10-14"
+}
 ```
 
-Essa implementação funciona como uma etapa de validação da persistência e da exposição dos dados por meio da API REST.
+`perfil` é persistido na coluna `segmento`. Para selecionar cidade pelo nome, substitua `cidadeId` por, por exemplo, `"cidade": "Cidade Exemplo"`. Use um ID ou nome cadastrado na tabela `cidade`.
 
-> **Observação:** o caminho exato do endpoint de teste deve ser documentado conforme o mapeamento definido na controller.
+A consulta `GET /api/clientes` retorna até 50 resultados com identificador, nome, segmento (`perfil`), cidade e data da última compra.
 
----
+Exemplo de resposta:
 
-## Motor de recomendação
+```json
+[
+  {
+    "id": 1,
+    "nome": "Cliente Exemplo",
+    "perfil": "Varejo",
+    "cidade": "Cidade Exemplo",
+    "ultimaCompra": "2026-10-14"
+  }
+]
+```
 
-O endpoint principal do motor de recomendação é:
+### Produtos
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/api/produtos` | Cadastra produto e relações opcionais de complementaridade. |
+
+Exemplo:
 
 ```http
-GET /api/recomendacoes/{clienteId}
+POST http://localhost:8080/api/produtos
+Content-Type: application/json
 ```
 
-Ele recebe o identificador de um cliente e retorna os produtos ativos associados ao fluxo de recomendação.
+```json
+{
+  "nome": "Produto Exemplo",
+  "categoria": "FAMILIA_DE_TESTE",
+  "produtosComplementaresIds": [],
+  "precoBase": 15.90,
+  "precoMinimo": 12.00
+}
+```
 
-### Hipótese e regra inicial (V1)
+A categoria é armazenada em `produto.cod_familia`. Os IDs em `produtosComplementaresIds` devem corresponder a produtos já cadastrados.
 
-A regra inicial considera que clientes podem apresentar interesse por produtos de categorias que já compraram, por produtos complementares aos itens do histórico e por ofertas vigentes.
+### Pedidos
 
-Esses fatores são utilizados para calcular um score explicável, sem depender de um modelo de inteligência artificial treinado.
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/api/pedidos` | Registra um pedido e seus itens. |
 
-Os produtos inativos são excluídos. Cada produto ativo recebe 10 pontos de base, e o ranking considera os seguintes sinais:
+Exemplo:
 
-| Sinal | Pontuação | Justificativa |
-|---|---:|---|
-| Cada item comprado na mesma categoria | +5, limitado a +25 | Representa uma preferência observada do cliente. |
-| Complementaridade com algum produto comprado | +20 | Considera relações de complementaridade cadastradas nos produtos. |
-| Promoção ativa para o produto ou sua categoria | +15 | Destaca ofertas vigentes no momento da consulta. |
-
-A lista é ordenada do maior para o menor score. Cada recomendação apresenta os motivos que contribuíram para sua pontuação.
-
-Em caso de empate, os produtos são ordenados pelo identificador. Na ausência de histórico ou promoção, o produto ativo mantém a pontuação-base de 10 pontos, com essa condição indicada no motivo. Um cliente inexistente retorna `404`.
-
-Os dados de clima e feriados permanecem como informações de contexto e ainda não interferem no cálculo do score V1.
-
-### Endpoints de cadastro
-
-Os endpoints abaixo fazem parte do fluxo de alimentação dos dados utilizados pelo motor:
-
-- `POST /api/clientes` — cadastra um cliente.
-- `POST /api/produtos` — cadastra um produto. O campo `produtosComplementaresIds` é opcional e referencia produtos já cadastrados.
-- `POST /api/pedidos` — registra uma compra e seus itens. As quantidades devem ser positivas.
-- `POST /api/promocoes` — cadastra uma promoção por produto ou categoria, com tipo, valor e período.
-
-Exemplo de inclusão de compra:
+```http
+POST http://localhost:8080/api/pedidos
+Content-Type: application/json
+```
 
 ```json
 {
@@ -172,259 +158,138 @@ Exemplo de inclusão de compra:
   "dataCompra": "2026-10-14",
   "itens": [
     {
-      "produtoId": 2,
-      "quantidade": 1
+      "produtoId": 1,
+      "quantidade": 2,
+      "valorUnitario": 15.90
     }
   ]
 }
 ```
 
-Exemplo de consulta das recomendações:
+O cliente e os produtos informados precisam existir. Quantidades devem ser positivas. A data enviada como `yyyy-MM-dd` é persistida como timestamp no início daquele dia.
+
+### Promoções
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/api/promocoes` | Cadastra uma promoção por produto ou por categoria/família. |
+
+Exemplo por produto:
 
 ```http
-GET /api/recomendacoes/1
+POST http://localhost:8080/api/promocoes
+Content-Type: application/json
 ```
 
----
+```json
+{
+  "nome": "Oferta de teste",
+  "produtoId": 1,
+  "tipoDesconto": "PERCENTUAL",
+  "valorDesconto": 10.00,
+  "inicio": "2026-10-14",
+  "fim": "2026-10-31"
+}
+```
 
-# APIs externas
+Tipos aceitos: `PERCENTUAL` e `VALOR_FIXO`. Para uma promoção por categoria, omita `produtoId` e envie `"categoria": "FAMILIA_DE_TESTE"`. Envie apenas um dos dois campos. O fim do período é considerado inclusivo.
 
-O projeto possui uma camada de integração com fontes externas de dados de contexto, que poderão ser utilizadas futuramente pelo motor de recomendação.
+### Recomendações
 
-As integrações contemplam três grupos de informações:
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/recomendacoes/{clienteId}` | Recomenda produtos para o cliente; usa a cidade cadastrada quando disponível. |
+| `GET` | `/api/recomendacoes/{clienteId}?cidade={cidade}` | Permite informar uma cidade para esta consulta. |
 
-1. Localização.
-2. Clima.
-3. Feriados.
-
-As APIs utilizadas são:
-
-- **Open-Meteo** — localização e informações meteorológicas.
-- **BrasilAPI** — informações relacionadas a feriados.
-
-Os dados retornados por essas integrações ainda não alteram o score das recomendações. A implementação atual fornece uma base para futuras regras de negócio.
-
----
-
-## Open-Meteo
-
-A Open-Meteo é utilizada para obter informações de localização e clima.
-
-Sua Geocoding API permite pesquisar localidades a partir do nome de uma cidade, enquanto a API meteorológica utiliza coordenadas geográficas para consultar informações sobre as condições climáticas.
-
-### Localização
+Exemplo:
 
 ```http
-GET /api/contexto/localizacao?cidade=São Paulo
+GET http://localhost:8080/api/recomendacoes/1
 ```
 
-O endpoint consulta a localização informada utilizando a integração com o serviço de geocoding.
+Cada item da resposta informa `produtoId`, `nomeProduto`, `categoria`, `score`, `motivos` e `promocaoId`. O cliente precisa existir. Se clima ou calendário estiverem indisponíveis, a recomendação ainda pode ser calculada com os dados internos, e a resposta informa o fator contextual indisponível nos motivos.
 
-Fluxo conceitual:
+Exemplo de resposta:
 
-```text
-Nome da cidade
-      |
-      v
-Open-Meteo Geocoding
-      |
-      v
-Latitude e longitude
+```json
+[
+  {
+    "produtoId": 1,
+    "nomeProduto": "Produto Exemplo",
+    "categoria": "FAMILIA_DE_TESTE",
+    "score": 30.0,
+    "motivos": [
+      "Categoria FAMILIA_DE_TESTE presente no histórico (1 item(ns), +5)",
+      "Promoção vigente: Oferta de teste (+15)"
+    ],
+    "promocaoId": 1
+  }
+]
 ```
 
-### Clima
+### Contexto: localização e clima
+
+| Método | Endpoint | Fonte |
+|---|---|---|
+| `GET` | `/api/contexto/localizacao?cidade={cidade}` | Open-Meteo Geocoding |
+| `GET` | `/api/contexto/clima?cidade={cidade}` | Open-Meteo Geocoding e Forecast |
+
+Exemplos:
 
 ```http
-GET /api/contexto/clima?cidade=São Paulo
+GET http://localhost:8080/api/contexto/localizacao?cidade=São%20Paulo
+GET http://localhost:8080/api/contexto/clima?cidade=São%20Paulo
 ```
 
-O fluxo utiliza a localização obtida para realizar a consulta meteorológica:
+A resposta de clima contém localização, horário da observação, temperatura, sensação térmica, umidade, precipitação, código WMO e vento.
 
-```text
-Cidade
-  |
-  v
-Open-Meteo Geocoding
-  |
-  v
-Latitude e longitude
-  |
-  v
-Open-Meteo Weather
-  |
-  v
-Dados meteorológicos
-```
+### Contexto: feriados
 
-Essas informações poderão servir de base para regras futuras, como a priorização de produtos associados a determinadas condições climáticas. Essa lógica ainda não faz parte do score atual.
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/contexto/feriados?ano={ano}` | Lista feriados nacionais. |
+| `GET` | `/api/contexto/feriados?ano={ano}&uf={UF}` | Consulta feriados com UF opcional. |
 
----
-
-## BrasilAPI
-
-A BrasilAPI é utilizada para consultar informações relacionadas a feriados.
-
-Consulta de feriados nacionais:
+Exemplos:
 
 ```http
-GET /api/contexto/feriados?ano=2026
+GET http://localhost:8080/api/contexto/feriados?ano=2026
+GET http://localhost:8080/api/contexto/feriados?ano=2026&uf=SP
 ```
 
-Consulta considerando uma unidade federativa:
+A consulta usa a BrasilAPI. O ano aceito pela API vai de 1900 a 2199, e a UF deve conter duas letras.
 
-```http
-GET /api/contexto/feriados?ano=2026&uf=SP
-```
+## Como o score funciona (V1)
 
-A integração permite consultar feriados nacionais e, quando uma UF é informada, feriados estaduais conforme os dados disponibilizados pela API.
+O motor gera pontuações explicáveis, sem modelo de machine learning treinado. Produtos inativos são ignorados. Cada produto ativo começa com 10 pontos:
 
-Fluxo conceitual:
+| Fator | Pontos | Regra |
+|---|---:|---|
+| Histórico na mesma categoria/família | +5 por linha de item, até +25 | Conta itens de pedidos anteriores do cliente cuja categoria corresponde a `cod_familia`. |
+| Produto complementar | +20 | O produto recomendado está relacionado a um produto comprado na tabela `produto_complementar`. |
+| Promoção vigente | +15 | Aplica uma promoção correspondente ao produto ou à categoria. Se houver ambas, a promoção específica do produto tem prioridade. |
+| Clima quente ou frio | +8 | Calor a partir de 27 °C ou frio até 18 °C, se a família do produto corresponder às categorias configuradas. |
+| Chuva | +8 | Precipitação a partir de 0,5 mm ou código WMO de chuva, se a família corresponder às categorias configuradas. |
+| Feriado próximo | +7 | Feriado nacional hoje ou nos próximos 7 dias e família compatível. |
 
-```text
-Ano e UF opcional
-        |
-        v
-    BrasilAPI
-        |
-        v
-Dados de feriados
-        |
-        v
-Dados de contexto
-```
+Os limites, pesos e categorias de contexto podem ser ajustados em `application.properties` ou por variáveis de ambiente com prefixo `REC_`. A comparação das categorias ignora maiúsculas, minúsculas e acentos. Os produtos são ordenados por score decrescente; empates são ordenados pelo ID.
 
-Essas informações poderão ser utilizadas futuramente para considerar datas comemorativas, períodos específicos do calendário e sazonalidade nas recomendações.
+## Integrações externas
 
----
+- **Open-Meteo:** busca a localização pelo nome da cidade e consulta o clima atual por coordenadas.
+- **BrasilAPI:** consulta feriados por ano e, opcionalmente, UF.
 
-## APIs de contexto
+As integrações precisam de acesso à internet. Falhas nas APIs externas não impedem a recomendação: o serviço registra um aviso e calcula o score sem o fator contextual indisponível.
 
-Os endpoints relacionados às integrações externas são:
+## Segurança e dados
 
-| Endpoint | Finalidade |
-|---|---|
-| `GET /api/contexto/localizacao?cidade={cidade}` | Consulta a localização de uma cidade utilizando a Open-Meteo. |
-| `GET /api/contexto/clima?cidade={cidade}` | Consulta informações climáticas com base na localização. |
-| `GET /api/contexto/feriados?ano={ano}` | Consulta feriados nacionais pela BrasilAPI. |
-| `GET /api/contexto/feriados?ano={ano}&uf={UF}` | Consulta feriados considerando a UF informada. |
+Este README não contém credenciais do banco, tokens ou dados reais de clientes. Mantenha as credenciais locais fora de arquivos publicados e nunca inclua valores sensíveis em exemplos, logs, commits ou documentação compartilhada. Os valores apresentados nos exemplos são fictícios e devem ser substituídos por registros de teste.
 
-Esses endpoints compõem a camada de integração com dados externos da aplicação.
+## Limitações e próximos passos
 
----
-
-## Evolução do motor de recomendação
-
-A arquitetura foi planejada para permitir que o motor evolua gradualmente, incorporando diferentes fatores na seleção e priorização de produtos.
-
-```text
-              Dados do cliente
-                    |
-                    v
-              Histórico de
-                compras
-                    |
-                    |
-Dados de localização
-                    |
-Dados climáticos
-                    |
-Dados de calendário
-                    |
-                    v
-          Regras de recomendação
-                    |
-                    v
-             Cálculo do score
-                    |
-                    v
-           Produtos recomendados
-```
-
-Entre os fatores que poderão ser considerados nas próximas etapas estão:
-
-- Histórico de compras.
-- Perfil de consumo do cliente.
-- Localização.
-- Condições climáticas.
-- Período do ano.
-- Feriados.
-- Sazonalidade.
-- Combinação entre diferentes fatores.
-
-Essas possibilidades fazem parte da evolução planejada. A utilização de cada variável no cálculo do score dependerá da definição e da validação das respectivas regras de negócio.
-
----
-
-## Executando o projeto
-
-Para executar a aplicação localmente utilizando o Maven Wrapper:
-
-```powershell
-.\mvnw.cmd spring-boot:run
-```
-
-Antes de iniciar a aplicação, verifique se:
-
-- O Java 21 está instalado e configurado.
-- As dependências do projeto podem ser resolvidas pelo Maven.
-- O banco de dados está acessível.
-- As configurações de conexão estão definidas corretamente nas propriedades da aplicação ou nas variáveis de ambiente utilizadas pelo projeto.
-
-A aplicação utiliza o banco de dados configurado, em vez de depender do banco H2 em memória descrito na estrutura inicial.
-
----
-
-## Documentação da API
-
-A aplicação utiliza Springdoc OpenAPI para documentar os endpoints REST.
-
-Após iniciar a aplicação, a interface Swagger pode ser acessada em:
-
-```text
-/swagger-ui.html
-```
-
-Por meio dela, é possível visualizar e testar os endpoints disponibilizados pela aplicação, conforme as configurações do Springdoc.
-
----
-
-## Status atual
-
-O projeto encontra-se em desenvolvimento, com a estrutura inicial implementada e a integração com o banco de dados estabelecida.
-
-### Implementado
-
-- Estrutura inicial da aplicação Spring Boot.
-- Desenvolvimento em Java 21.
-- Persistência com Spring Data JPA.
-- Integração com o banco de dados.
-- Controller de teste para consulta de clientes em JSON.
-- Endpoint de recomendações com ranking por histórico, produtos complementares e promoções vigentes, conforme a implementação V1 documentada.
-- Cadastro de clientes, produtos, compras e promoções.
-- Integração com Open-Meteo.
-- Consulta de localização.
-- Consulta de clima.
-- Integração com BrasilAPI.
-- Consulta de feriados nacionais e estaduais.
-- Documentação OpenAPI / Swagger.
-
-### Alterações recentes
-
-- Integração do banco de dados ao projeto.
-- Remoção do Flyway e de sua configuração de migrations.
-- Criação de uma controller de teste para retornar os dados dos clientes cadastrados em formato JSON.
-
-### Próximas evoluções
-
-- Validar os pesos do score V1 com dados reais.
-- Definir relações de negócio justificadas entre clima, localização, calendário e categorias de produtos.
-- Avaliar a qualidade das recomendações.
-- Aprimorar a priorização de produtos conforme o perfil e o contexto dos clientes.
-
----
-
-## Objetivo
-
-O objetivo do projeto é desenvolver um **motor de recomendação contextual** capaz de combinar informações sobre clientes, produtos, histórico de compras e fatores externos para gerar recomendações mais relevantes.
-
-A implementação atual estabelece uma base com persistência de dados, endpoints REST e integrações externas, permitindo evoluir progressivamente as regras de recomendação e as funcionalidades da aplicação.
+- O schema é administrado fora do Hibernate; alterações no banco precisam ser refletidas nos mapeamentos JPA.
+- O cálculo usa regras fixas e deve ter pesos e categorias avaliados com dados reais.
+- A tabela `estoque_erp` ainda não filtra recomendações por disponibilidade.
+- A chave composta dos itens de pedido pressupõe uma única linha de cada produto por pedido.
+- A API não implementa autenticação ou autorização.
+- Os endpoints de cadastro são voltados ao fluxo de ingestão V1; o projeto ainda pode evoluir com paginação completa, monitoramento, validação mais estrita e testes automatizados.
