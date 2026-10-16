@@ -2,7 +2,6 @@
 
 API REST de recomendação de produtos desenvolvida para o desafio Geração Caldeira. O motor combina dados de clientes, catálogo, histórico de compras, promoções e contexto externo (clima e feriados) para ordenar produtos ativos por uma pontuação explicável.
 
-
 ## Tecnologias
 
 - Java 21
@@ -74,7 +73,7 @@ Todos os exemplos usam `Content-Type: application/json` nos métodos `POST`.
 
 | Método | Endpoint | Descrição |
 |---|---|---|
-| `GET` | `/api/clientes` | Lista até 50 clientes. |
+| `GET` | `/api/clientes` | Lista até 50 clientes, sem expor CNPJ ou telefone. |
 | `POST` | `/api/clientes` | Cadastra cliente. A cidade pode ser informada pelo ID ou pelo nome de uma cidade já existente. |
 
 Exemplo de cadastro:
@@ -283,6 +282,28 @@ Os limites, pesos e categorias de contexto podem ser ajustados em `application.p
 
 As integrações precisam de acesso à internet. Falhas nas APIs externas não impedem a recomendação: o serviço registra um aviso e calcula o score sem o fator contextual indisponível.
 
+## Testes automatizados
+
+Os testes unitários estão em `src/test/java` e verificam regras do recomendador e da pontuação contextual sem iniciar a aplicação, acessar o banco de dados ou chamar as APIs externas. Os repositórios e serviços dependentes são simulados nos testes do motor.
+
+A cobertura atual inclui:
+
+- pontuação por categoria compatível com clima quente, incluindo normalização de acentos e maiúsculas/minúsculas;
+- pontuação por feriado próximo e propagação de avisos contextuais;
+- rejeição de limites de temperatura inconsistentes;
+- ordenação de recomendações por score e desempate pelo ID do produto;
+- score base e motivo apresentado quando não há fatores adicionais;
+- retorno `404` para cliente inexistente, sem consultar os demais componentes;
+- uso da cidade informada na consulta como substituta da cidade do cadastro.
+
+Para executar a suíte, use Java 21 e rode na raiz do projeto:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Os testes não precisam de credenciais ou conexão com o PostgreSQL. Para executar a aplicação completa, as configurações de banco continuam necessárias conforme a seção [Executar localmente](#executar-localmente).
+
 ## Limitações e próximos passos
 
 - O schema é administrado fora do Hibernate; alterações no banco precisam ser refletidas nos mapeamentos JPA.
@@ -290,4 +311,4 @@ As integrações precisam de acesso à internet. Falhas nas APIs externas não i
 - A tabela `estoque_erp` ainda não filtra recomendações por disponibilidade.
 - A chave composta dos itens de pedido pressupõe uma única linha de cada produto por pedido.
 - A API não implementa autenticação ou autorização.
-- Os endpoints de cadastro são voltados ao fluxo de ingestão V1; o projeto ainda pode evoluir com paginação completa, monitoramento, validação mais estrita e testes automatizados.
+- Os endpoints de cadastro são voltados ao fluxo de ingestão V1; o projeto ainda pode evoluir com paginação completa, monitoramento e validação mais estrita.
