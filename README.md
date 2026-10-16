@@ -2,8 +2,6 @@
 
 API REST de recomendação de produtos desenvolvida para o desafio Geração Caldeira. O motor combina dados de clientes, catálogo, histórico de compras, promoções e contexto externo (clima e feriados) para ordenar produtos ativos por uma pontuação explicável.
 
-> Os exemplos deste documento usam dados fictícios. Substitua os IDs pelos registros existentes no seu banco.
-
 ## Tecnologias
 
 - Java 21
@@ -16,11 +14,6 @@ API REST de recomendação de produtos desenvolvida para o desafio Geração Cal
 - Maven Wrapper
 
 ## Executar localmente
-
-1. Instale e selecione o Java 21.
-2. Configure a conexão PostgreSQL localmente em `src/main/resources/application.properties` (`spring.datasource.url`, `spring.datasource.username` e `spring.datasource.password`). Não coloque valores reais de conexão neste README nem os publique no Git.
-3. Use um banco que já tenha as tabelas esperadas. O projeto está com `spring.jpa.hibernate.ddl-auto=none`: o Hibernate não cria nem altera tabelas.
-4. Na raiz do projeto, inicie a aplicação:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
@@ -63,6 +56,14 @@ A propriedade `categoria` do modelo de produto corresponde à coluna `cod_famili
 Os itens do pedido são mapeados com chave composta `(pedido_id, produto_id)`, pois a tabela informada não possui uma coluna de identificador própria. Isso pressupõe no máximo uma linha por produto em cada pedido.
 
 As tabelas `estoque_erp` e outros campos do banco que não aparecem na lista de mapeamentos ainda não participam da lógica atual do recomendador.
+
+### Versionamento com Flyway
+
+As migrations SQL versionadas ficam em `src/main/resources/db/migration` e seguem o padrão `V<versão>__<descrição>.sql`. A migration `V1__criar_esquema_inicial.sql` cria as tabelas acima quando a aplicação inicia contra um schema `public` vazio.
+
+No primeiro início contra o banco Supabase já existente, o Flyway cria `flyway_schema_history` e registra o schema atual como baseline na versão `1`. Esse baseline não reaplica a V1 e não recria nem apaga as tabelas existentes. O Hibernate valida o mapeamento com `spring.jpa.hibernate.ddl-auto=validate`. Depois desse baseline, novas alterações devem ser adicionadas em migrations novas, como `V2__descricao_da_alteracao.sql`; migrations já aplicadas não devem ser editadas.
+
+O usuário PostgreSQL configurado para a aplicação precisa ter permissão para criar a tabela `flyway_schema_history` no schema `public` e executar as migrations futuras. O Flyway usa o mesmo datasource configurado para o Spring.
 
 ## Endpoints
 
@@ -281,9 +282,27 @@ Os limites, pesos e categorias de contexto podem ser ajustados em `application.p
 
 As integrações precisam de acesso à internet. Falhas nas APIs externas não impedem a recomendação: o serviço registra um aviso e calcula o score sem o fator contextual indisponível.
 
-## Segurança e dados
+## Testes automatizados
 
-Este README não contém credenciais do banco, tokens ou dados reais de clientes. Mantenha as credenciais locais fora de arquivos publicados e nunca inclua valores sensíveis em exemplos, logs, commits ou documentação compartilhada. Os valores apresentados nos exemplos são fictícios e devem ser substituídos por registros de teste.
+Os testes unitários estão em `src/test/java` e verificam regras do recomendador e da pontuação contextual sem iniciar a aplicação, acessar o banco de dados ou chamar as APIs externas. Os repositórios e serviços dependentes são simulados nos testes do motor.
+
+A cobertura atual inclui:
+
+- pontuação por categoria compatível com clima quente, incluindo normalização de acentos e maiúsculas/minúsculas;
+- pontuação por feriado próximo e propagação de avisos contextuais;
+- rejeição de limites de temperatura inconsistentes;
+- ordenação de recomendações por score e desempate pelo ID do produto;
+- score base e motivo apresentado quando não há fatores adicionais;
+- retorno `404` para cliente inexistente, sem consultar os demais componentes;
+- uso da cidade informada na consulta como substituta da cidade do cadastro.
+
+Para executar a suíte, use Java 21 e rode na raiz do projeto:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Os testes não precisam de credenciais ou conexão com o PostgreSQL. Para executar a aplicação completa, as configurações de banco continuam necessárias conforme a seção [Executar localmente](#executar-localmente).
 
 ## Limitações e próximos passos
 
@@ -292,4 +311,4 @@ Este README não contém credenciais do banco, tokens ou dados reais de clientes
 - A tabela `estoque_erp` ainda não filtra recomendações por disponibilidade.
 - A chave composta dos itens de pedido pressupõe uma única linha de cada produto por pedido.
 - A API não implementa autenticação ou autorização.
-- Os endpoints de cadastro são voltados ao fluxo de ingestão V1; o projeto ainda pode evoluir com paginação completa, monitoramento, validação mais estrita e testes automatizados.
+- Os endpoints de cadastro são voltados ao fluxo de ingestão V1; o projeto ainda pode evoluir com paginação completa, monitoramento e validação mais estrita.
