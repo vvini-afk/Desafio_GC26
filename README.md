@@ -49,13 +49,12 @@ O projeto espera as tabelas já criadas no schema `public`. O mapeamento atual u
 | `pedido` | `id_pedido`, `data_pedido`, `id_cliente` |
 | `item_pedido` | `pedido_id`, `produto_id`, `quantidade`, `valor_unitario` |
 | `promocao` | `id_promocao`, `nome`, `produto_id`, `categoria`, `tipo_desconto`, `valor_desconto`, `inicio`, `fim`, `ativa` |
-| `notificacao` | `id_notificacao`, `cliente_id`, `tipo`, `mensagem`, `canal`, `status`, `criada_em` |
 
 A propriedade `categoria` do modelo de produto corresponde à coluna `cod_familia`. A cidade do cliente é obtida pela relação `cliente.id_cidade` → `cidade.id_cidade`; a API de recomendação usa o nome da cidade para consultar o clima.
 
 Os itens do pedido são mapeados com chave composta `(pedido_id, produto_id)`, pois a tabela informada não possui uma coluna de identificador própria. Isso pressupõe no máximo uma linha por produto em cada pedido.
 
-As tabelas `estoque_erp` e outros campos do banco que não aparecem na lista de mapeamentos ainda não participam da lógica atual do recomendador.
+As tabelas `estoque_erp`, `notificacao` e outros campos do banco que não aparecem na lista de mapeamentos ainda não participam da lógica atual do recomendador.
 
 ### Versionamento com Flyway
 
@@ -273,7 +272,7 @@ O motor gera pontuações explicáveis, sem modelo de machine learning treinado.
 | Chuva | +8 | Precipitação a partir de 0,5 mm ou código WMO de chuva, se a família corresponder às categorias configuradas. |
 | Feriado próximo | +7 | Feriado nacional hoje ou nos próximos 7 dias e família compatível. |
 
-Os limites, pesos e categorias de contexto podem ser ajustados em `application.properties` ou por variáveis de ambiente com prefixo `REC_`. A comparação das categorias ignora maiúsculas, minúsculas e acentos. Os produtos são ordenados por score decrescente; empates são ordenados pelo ID.
+Os limites, pesos e categorias de contexto podem ser ajustados em `application.properties` ou por variáveis de ambiente com prefixo `REC_`. As famílias do catálogo Supabase associadas a calor são águas, águas saborizadas, refrigerantes, citrus, sucos e energéticos; feriados consideram refrigerantes, citrus, sucos, cervejas e vinhos. Não há famílias associadas por padrão a frio ou chuva. A comparação ignora maiúsculas, minúsculas e acentos. Os produtos são ordenados por score decrescente; empates são ordenados pelo ID.
 
 ## Integrações externas
 

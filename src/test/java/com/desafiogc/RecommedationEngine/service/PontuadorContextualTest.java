@@ -14,18 +14,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class ContextoRecomendacaoServiceTest {
+class PontuadorContextualTest {
 
-    private final ContextoService clima = mock(ContextoService.class);
-    private final FeriadoService feriados = mock(FeriadoService.class);
-    private final ContextoRecomendacaoService service = new ContextoRecomendacaoService(
-            clima, feriados, 27, 18, 0.5, 7, 8, 7,
-            "Bebidas geladas|Sorvetes|Praia|Verão", "Bebidas quentes|Cafés|Chás|Sopas|Agasalhos|Inverno",
-            "Guarda-chuva|Capa de chuva|Galochas", "Presentes|Festas|Decoração|Viagem|Alimentos");
+    private final PontuadorContextual service = new PontuadorContextual(
+            27, 18, 0.5, 7, 8, 7,
+            "REFRIGERANTE|AGUAS|AGUA SABORIZADA|AGUA 20 LITROS|AGUA 5 LITROS|CITRUS|SUCOS|ENERGETICO",
+            "", "", "REFRIGERANTE|CITRUS|SUCOS|CERVEJA|VINHO");
 
     @Test
     void pontuaCategoriaDeCalorIgnorandoAcentosEMaiusculas() {
-        Produto produto = produto("VERAO");
+        Produto produto = produto("0101 - REFRIGERANTE PET");
         ClimaDTO climaQuente = new ClimaDTO("Porto Alegre", 0, 0, LocalDateTime.now(), 30,
                 30, 50, 0, 0, 2);
 
@@ -38,7 +36,7 @@ class ContextoRecomendacaoServiceTest {
 
     @Test
     void pontuaChuvaEProximoFeriado() {
-        Produto produto = produto("Presentes");
+        Produto produto = produto("0113 - CERVEJA LATA");
         ClimaDTO climaChuvoso = new ClimaDTO("Porto Alegre", 0, 0, LocalDateTime.now(), 22,
                 22, 70, 0, 61, 5);
         FeriadoDTO feriado = new FeriadoDTO(LocalDate.now().plusDays(2), "Feriado", "nacional");
@@ -53,8 +51,8 @@ class ContextoRecomendacaoServiceTest {
 
     @Test
     void rejeitaLimitesDeTemperaturaInconsistentes() {
-        assertThrows(IllegalArgumentException.class, () -> new ContextoRecomendacaoService(
-                clima, feriados, 18, 27, 0.5, 7, 8, 7,
+        assertThrows(IllegalArgumentException.class, () -> new PontuadorContextual(
+                18, 27, 0.5, 7, 8, 7,
                 "", "", "", ""));
     }
 

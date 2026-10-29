@@ -4,7 +4,10 @@ import com.desafiogc.RecommedationEngine.model.cliente.Cliente;
 import com.desafiogc.RecommedationEngine.model.pedido.Pedido;
 import com.desafiogc.RecommedationEngine.model.produto.Produto;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Promocao;
-import com.desafiogc.RecommedationEngine.service.IngestaoDadosService;
+import com.desafiogc.RecommedationEngine.service.CadastroClienteService;
+import com.desafiogc.RecommedationEngine.service.CadastroProdutoService;
+import com.desafiogc.RecommedationEngine.service.CadastroPromocaoService;
+import com.desafiogc.RecommedationEngine.service.RegistroPedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,29 +21,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class IngestaoController {
-    private final IngestaoDadosService ingestaoDadosService;
+    private final CadastroClienteService cadastroClienteService;
+    private final CadastroProdutoService cadastroProdutoService;
+    private final RegistroPedidoService registroPedidoService;
+    private final CadastroPromocaoService cadastroPromocaoService;
 
     @PostMapping("/clientes")
     public ResponseEntity<RegistroDTO> criarCliente(@Valid @RequestBody ClienteRequest request) {
-        Cliente cliente = ingestaoDadosService.criarCliente(request);
+        Cliente cliente = cadastroClienteService.criar(request);
         return criado("clientes", cliente.getId(), "Cliente cadastrado.");
     }
 
     @PostMapping("/produtos")
     public ResponseEntity<RegistroDTO> criarProduto(@Valid @RequestBody ProdutoRequest request) {
-        Produto produto = ingestaoDadosService.criarProduto(request);
+        Produto produto = cadastroProdutoService.criar(request);
         return criado("produtos", produto.getId(), "Produto cadastrado.");
     }
 
     @PostMapping("/pedidos")
     public ResponseEntity<RegistroDTO> criarPedido(@Valid @RequestBody PedidoRequest request) {
-        Pedido pedido = ingestaoDadosService.criarPedido(request);
+        Pedido pedido = registroPedidoService.criar(request);
         return criado("pedidos", pedido.getId(), "Compra registrada.");
     }
 
     @PostMapping("/promocoes")
     public ResponseEntity<RegistroDTO> criarPromocao(@Valid @RequestBody PromocaoRequest request) {
-        Promocao promocao = ingestaoDadosService.criarPromocao(request);
+        Promocao promocao = cadastroPromocaoService.criar(request);
         return criado("promocoes", promocao.getId(), "Promoção cadastrada.");
     }
 

@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 
 @Entity
@@ -30,4 +31,10 @@ public class Cidade {
     @JdbcTypeCode(Types.CHAR)
     @Column(length = 2, nullable = false)
     private String uf;
+
+    @Column(name = "regiao")
+    private String regiao;
+
+    @Column(name = "multiplicador", precision = 10, scale = 4)
+    private BigDecimal multiplicador;
 }

@@ -24,18 +24,20 @@ class MotorRecomendacaoServiceTest {
     private final PedidoRepository pedidos = mock(PedidoRepository.class);
     private final PromocaoRepository promocoes = mock(PromocaoRepository.class);
     private final ContextoRecomendacaoService contexto = mock(ContextoRecomendacaoService.class);
+    private final PontuadorRecomendacao pontuador = mock(PontuadorRecomendacao.class);
     private final MotorRecomendacaoService service = new MotorRecomendacaoService(
-            clientes, produtos, pedidos, promocoes, contexto);
+            clientes, produtos, pedidos, promocoes, contexto, pontuador);
     private final ContextoRecomendacao contextoVazio = new ContextoRecomendacao(null, List.of(), List.of());
 
     @BeforeEach
     void configurarCenarioSemFatoresAdicionais() {
-        reset(clientes, produtos, pedidos, promocoes, contexto);
+        reset(clientes, produtos, pedidos, promocoes, contexto, pontuador);
         when(clientes.findById(1)).thenReturn(Optional.of(new Cliente(
                 null, "Cliente", null, null, null, null, null, null, null)));
         when(contexto.consultar(null)).thenReturn(contextoVazio);
-        when(contexto.pontuar(any(Produto.class), eq(contextoVazio)))
-                .thenReturn(new PontuacaoContextual(0, List.of()));
+        when(pontuador.pontuar(any(Produto.class), anyMap(), anySet(), anyList(), eq(contextoVazio)))
+                .thenAnswer(invocation -> new com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao(
+                        invocation.getArgument(0), 10, List.of("Produto ativo; sem fatores (+10)"), null));
         when(pedidos.findByCliente_Id(1)).thenReturn(List.of());
         when(promocoes.findAll()).thenReturn(List.of());
     }
@@ -61,7 +63,7 @@ class MotorRecomendacaoServiceTest {
                 () -> service.recomendar(404, null));
 
         assertEquals(404, erro.getStatusCode().value());
-        verifyNoInteractions(produtos, pedidos, promocoes, contexto);
+        verifyNoInteractions(produtos, pedidos, promocoes, contexto, pontuador);
     }
 
     @Test
