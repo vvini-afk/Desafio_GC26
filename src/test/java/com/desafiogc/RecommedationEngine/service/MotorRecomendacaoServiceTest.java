@@ -37,7 +37,8 @@ class MotorRecomendacaoServiceTest {
         when(contexto.consultar(null)).thenReturn(contextoVazio);
         when(pontuador.pontuar(any(Produto.class), anyMap(), anySet(), anyList(), eq(contextoVazio)))
                 .thenAnswer(invocation -> new com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao(
-                        invocation.getArgument(0), 10, List.of("Produto ativo; sem fatores (+10)"), null));
+                        invocation.getArgument(0), 10, List.of("Produto ativo; sem fatores (+10)"), null,
+                        false, List.of()));
         when(pedidos.findByCliente_Id(1)).thenReturn(List.of());
         when(promocoes.findAll()).thenReturn(List.of());
     }

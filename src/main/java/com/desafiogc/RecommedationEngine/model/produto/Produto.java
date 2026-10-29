@@ -73,4 +73,8 @@ public class Produto {
             complementaresIds.add(produtoId);
         }
     }
+
+    public void limparComplementares() {
+        complementaresIds.clear();
+    }
 }

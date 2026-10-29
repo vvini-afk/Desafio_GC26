@@ -18,6 +18,7 @@ public class RegistroPedidoService {
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
     private final PedidoRepository pedidoRepository;
+    private final CrossSellService crossSellService;
 
     @Transactional
     public Pedido criar(PedidoRequest request) {
@@ -30,6 +31,8 @@ public class RegistroPedidoService {
                             "Produto não encontrado: " + item.produtoId()));
             pedido.adicionarItem(produto, item.quantidade(), item.valorUnitario());
         }
-        return pedidoRepository.save(pedido);
+        Pedido pedidoSalvo = pedidoRepository.saveAndFlush(pedido);
+        crossSellService.recalcular();
+        return pedidoSalvo;
     }
 }

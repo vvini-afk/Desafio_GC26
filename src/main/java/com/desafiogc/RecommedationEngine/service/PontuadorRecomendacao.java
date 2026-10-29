@@ -3,6 +3,7 @@ package com.desafiogc.RecommedationEngine.service;
 import com.desafiogc.RecommedationEngine.model.contexto.ContextoRecomendacao;
 import com.desafiogc.RecommedationEngine.model.produto.Produto;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Promocao;
+import com.desafiogc.RecommedationEngine.model.recomendacao.PilarRecomendacao;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ public class PontuadorRecomendacao {
                                 ContextoRecomendacao contexto) {
         double score = SCORE_BASE;
         List<String> motivos = new ArrayList<>();
+        List<PilarRecomendacao> pilares = new ArrayList<>();
         boolean temSinalDeRecomendacao = false;
         long frequenciaCategoria = comprasPorCategoria.getOrDefault(
                 NormalizadorCategoria.normalizar(produto.getCategoria()), 0L);
@@ -37,6 +39,7 @@ public class PontuadorRecomendacao {
                     frequenciaCategoria * PONTOS_POR_ITEM_DA_CATEGORIA);
             score += pontos;
             temSinalDeRecomendacao = true;
+            pilares.add(PilarRecomendacao.HISTORICO);
             motivos.add("Categoria " + produto.getCategoria() + " presente no histórico ("
                     + frequenciaCategoria + " item(ns), +" + pontos + ")");
         }
@@ -45,6 +48,7 @@ public class PontuadorRecomendacao {
         if (complementar) {
             score += PONTOS_COMPLEMENTAR;
             temSinalDeRecomendacao = true;
+            pilares.add(PilarRecomendacao.CROSS_SELL);
             motivos.add("Complementar a um produto já comprado (+20)");
         }
 
@@ -59,6 +63,7 @@ public class PontuadorRecomendacao {
         if (promocao != null) {
             score += PONTOS_PROMOCAO;
             temSinalDeRecomendacao = true;
+            pilares.add(PilarRecomendacao.PROMOCAO);
             motivos.add("Promoção vigente: " + promocao.getNome() + " (+15)");
         }
 
@@ -69,6 +74,7 @@ public class PontuadorRecomendacao {
         if (!temSinalDeRecomendacao) {
             motivos.add("Produto ativo; sem fatores de preferência ou contexto aplicáveis (+10)");
         }
-        return new Recomendacao(produto, score, motivos, promocao);
+        return new Recomendacao(produto, score, motivos, promocao,
+                produtosComprados.contains(produto.getId()), pilares);
     }
 }

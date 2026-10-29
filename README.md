@@ -207,7 +207,7 @@ Exemplo:
 GET http://localhost:8080/api/recomendacoes/1
 ```
 
-Cada item da resposta informa `produtoId`, `nomeProduto`, `categoria`, `score`, `motivos` e `promocaoId`. O cliente precisa existir. Se clima ou calendário estiverem indisponíveis, a recomendação ainda pode ser calculada com os dados internos, e a resposta informa o fator contextual indisponível nos motivos.
+Cada item da resposta informa `produtoId`, `nomeProduto`, `categoria`, `score`, `motivos`, `promocaoId`, `precoBase`, `precoMinimo`, `valorDesconto`, `tipoDesconto`, `jaComprado`, `emPromocao`, `isCrossSell` e `pilares`. `valorDesconto` e `tipoDesconto` são nulos quando não há promoção. `jaComprado` indica compra do produto exato; `pilares` contém `HISTORICO` quando há compras anteriores da família, `PROMOCAO` quando há uma promoção vigente e `CROSS_SELL` quando o produto complementa um item comprado. O cliente precisa existir. Se clima ou calendário estiverem indisponíveis, a recomendação ainda pode ser calculada com os dados internos, e a resposta informa o fator contextual indisponível nos motivos.
 
 Exemplo de resposta:
 
@@ -222,9 +222,38 @@ Exemplo de resposta:
       "Categoria FAMILIA_DE_TESTE presente no histórico (1 item(ns), +5)",
       "Promoção vigente: Oferta de teste (+15)"
     ],
-    "promocaoId": 1
+    "promocaoId": 1,
+    "precoBase": 15.90,
+    "precoMinimo": 12.00,
+    "valorDesconto": 10.00,
+    "tipoDesconto": "PERCENTUAL",
+    "jaComprado": false,
+    "emPromocao": true,
+    "isCrossSell": false,
+    "pilares": [
+      "HISTORICO",
+      "PROMOCAO"
+    ]
   }
 ]
+```
+
+### Associação automática de produtos (Cross-Sell)
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/api/admin/processar-cross-sell` | Reprocessa o histórico de `item_pedido` e substitui as associações em `produto_complementar`. |
+
+O processamento também é executado automaticamente após cada pedido registrado em `POST /api/pedidos`. Para cada produto, o serviço considera os outros produtos presentes nos mesmos pedidos, calcula a frequência (quantos pedidos contêm o par) e a confiança direcional (frequência do par dividida pelo número de pedidos com o produto de origem). Seleciona até três complementares ativos, ordenando por confiança, frequência e ID. O endpoint administrativo permite recalcular o histórico existente manualmente.
+
+O processamento limpa as associações antigas e grava somente as recém-calculadas. As linhas são armazenadas no sentido consumido pelo pontuador: o produto candidato aponta para o produto comprado. Assim, o GET de recomendações encontra a relação e aplica `+20` pontos. A resposta informa quantos produtos foram analisados e quantos pares foram selecionados e persistidos:
+
+```json
+{
+  "produtosAnalisados": 0,
+  "paresSelecionados": 0,
+  "associacoesPersistidas": 0
+}
 ```
 
 ### Contexto: localização e clima
