@@ -4,14 +4,25 @@ API REST de recomendação de produtos desenvolvida para o desafio Geração Cal
 
 ## Tecnologias
 
-- Java 21
-- Spring Boot 4.1.1
-- Spring Web MVC e Spring Data JPA
-- PostgreSQL
-- Bean Validation
-- Lombok
-- Springdoc OpenAPI / Swagger UI
-- Maven Wrapper
+| Tecnologia | Uso no projeto |
+|---|---|
+| Java 21 | Linguagem e versão mínima configurada para compilação. |
+| Spring Boot 4.1.1 | Base da aplicação e configuração automática dos componentes. |
+| Spring Web MVC | Criação dos endpoints REST. |
+| Spring Data JPA e Hibernate | Mapeamento das entidades e acesso relacional ao banco. |
+| PostgreSQL | Banco de dados principal; o driver JDBC é incluído no projeto. |
+| Flyway | Versionamento e execução das migrations SQL. |
+| Jakarta Bean Validation | Validação dos dados recebidos pelos endpoints. |
+| Lombok | Redução de código repetitivo em serviços e modelos. |
+| Springdoc OpenAPI / Swagger UI | Documentação interativa dos endpoints. |
+| Maven Wrapper | Compilação e execução do projeto sem exigir uma instalação local do Maven. |
+| JUnit Jupiter e Mockito | Testes automatizados e simulação de dependências. |
+| H2 | Dependência adicional de banco em memória; os testes documentados não exigem conexão com banco. |
+
+### Integrações externas
+
+- **Open-Meteo Geocoding e Forecast:** localização por cidade e dados meteorológicos usados na pontuação contextual.
+- **BrasilAPI:** consulta de feriados nacionais e estaduais usados no contexto da recomendação.
 
 ## Executar localmente
 
