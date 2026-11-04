@@ -47,7 +47,7 @@ class MotorRecomendacaoServiceTest {
     void retornaProdutosPorScoreEDesempataPeloId() {
         Produto idMaior = produto(9, "Item B", "Categoria");
         Produto idMenor = produto(3, "Item A", "Categoria");
-        when(produtos.findByAtivoTrueOrderByIdAsc()).thenReturn(List.of(idMaior, idMenor));
+        when(produtos.findAtivosComEstoqueDisponivel()).thenReturn(List.of(idMaior, idMenor));
 
         var recomendacoes = service.recomendar(1, null);
 
@@ -69,7 +69,7 @@ class MotorRecomendacaoServiceTest {
 
     @Test
     void cidadeInformadaSubstituiCidadeDoCliente() {
-        when(produtos.findByAtivoTrueOrderByIdAsc()).thenReturn(List.of());
+        when(produtos.findAtivosComEstoqueDisponivel()).thenReturn(List.of());
 
         service.recomendar(1, "  Curitiba  ");
 
