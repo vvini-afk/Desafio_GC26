@@ -18,8 +18,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class PontuadorRecomendacao {
     private static final double SCORE_BASE = 10.0;
-    private static final int PONTOS_POR_ITEM_DA_CATEGORIA = 5;
-    private static final int LIMITE_PONTOS_CATEGORIA = 25;
+    private static final int PONTOS_RECOMPRA_DIRETA = 5;
+    private static final int PONTOS_POR_ITEM_DA_CATEGORIA = 3;
+    private static final int LIMITE_PONTOS_CATEGORIA = 10;
     private static final double PONTOS_COMPLEMENTAR = 20.0;
     private static final double PONTOS_PROMOCAO = 15.0;
 
@@ -32,9 +33,16 @@ public class PontuadorRecomendacao {
         List<String> motivos = new ArrayList<>();
         List<PilarRecomendacao> pilares = new ArrayList<>();
         boolean temSinalDeRecomendacao = false;
+        boolean jaComprado = produtosComprados.contains(produto.getId());
         long frequenciaCategoria = comprasPorCategoria.getOrDefault(
                 NormalizadorCategoria.normalizar(produto.getCategoria()), 0L);
-        if (frequenciaCategoria > 0) {
+        if (jaComprado) {
+            score += PONTOS_RECOMPRA_DIRETA;
+            temSinalDeRecomendacao = true;
+            pilares.add(PilarRecomendacao.HISTORICO);
+            motivos.add("Recompra direta: produto já consta no histórico (+"
+                    + PONTOS_RECOMPRA_DIRETA + ")");
+        } else if (frequenciaCategoria > 0) {
             int pontos = (int) Math.min(LIMITE_PONTOS_CATEGORIA,
                     frequenciaCategoria * PONTOS_POR_ITEM_DA_CATEGORIA);
             score += pontos;
@@ -44,7 +52,8 @@ public class PontuadorRecomendacao {
                     + frequenciaCategoria + " item(ns), +" + pontos + ")");
         }
 
-        boolean complementar = produto.getComplementaresIds().stream().anyMatch(produtosComprados::contains);
+        boolean complementar = !jaComprado
+                && produto.getComplementaresIds().stream().anyMatch(produtosComprados::contains);
         if (complementar) {
             score += PONTOS_COMPLEMENTAR;
             temSinalDeRecomendacao = true;
@@ -75,6 +84,6 @@ public class PontuadorRecomendacao {
             motivos.add("Produto ativo; sem fatores de preferência ou contexto aplicáveis (+10)");
         }
         return new Recomendacao(produto, score, motivos, promocao,
-                produtosComprados.contains(produto.getId()), pilares);
+                jaComprado, pilares, temSinalDeRecomendacao);
     }
 }
