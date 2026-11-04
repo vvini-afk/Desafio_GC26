@@ -1,92 +1,111 @@
-# Motor de Recomendação
+# Motor de Recomendação Fruki
 
-API REST de recomendação de produtos desenvolvida para o desafio Geração Caldeira. O motor combina dados de clientes, catálogo, histórico de compras, promoções e contexto externo (clima e feriados) para ordenar produtos ativos por uma pontuação explicável.
+API REST do MVP de recomendação de produtos. O motor combina histórico de compras, produtos complementares, promoções, estoque, clima, feriados e multiplicador regional para gerar uma lista curta e explicável por cliente.
 
-## Tecnologias
+## Arquitetura resumida
 
-| Tecnologia | Uso no projeto |
-|---|---|
-| Java 21 | Linguagem e versão mínima configurada para compilação. |
-| Spring Boot 4.1.1 | Base da aplicação e configuração automática dos componentes. |
-| Spring Web MVC | Criação dos endpoints REST. |
-| Spring Data JPA e Hibernate | Mapeamento das entidades e acesso relacional ao banco. |
-| PostgreSQL | Banco de dados principal; o driver JDBC é incluído no projeto. |
-| Flyway | Versionamento e execução das migrations SQL. |
-| Jakarta Bean Validation | Validação dos dados recebidos pelos endpoints. |
-| Lombok | Redução de código repetitivo em serviços e modelos. |
-| Springdoc OpenAPI / Swagger UI | Documentação interativa dos endpoints. |
-| Maven Wrapper | Compilação e execução do projeto sem exigir uma instalação local do Maven. |
-| JUnit Jupiter e Mockito | Testes automatizados e simulação de dependências. |
-| H2 | Dependência adicional de banco em memória; os testes documentados não exigem conexão com banco. |
+```text
+Cliente HTTP / Swagger
+        ↓
+api/       Controllers e DTOs REST
+        ↓
+service/   Cadastro, recomendação, scoring e contexto
+      ↙                 ↘
+repository/ JPA       integration/ APIs externas
+      ↓                 ↓
+PostgreSQL          Open-Meteo / BrasilAPI
+```
 
-### Integrações externas
+- `api`: endpoints e contratos JSON.
+- `service`: regras de negócio, scoring, cross-sell e acesso ao contexto.
+- `model`: entidades e objetos de domínio.
+- `repository`: acesso a tabelas e à view de quebra de consumo.
+- `integration`: clientes HTTP para clima e feriados.
 
-- **Open-Meteo Geocoding e Forecast:** localização por cidade e dados meteorológicos usados na pontuação contextual.
-- **BrasilAPI:** consulta de feriados nacionais e estaduais usados no contexto da recomendação.
+## Tecnologias e pré-requisitos
 
-## Executar localmente
+- Java 21
+- Spring Boot, Spring Web, Spring Data JPA e Hibernate
+- PostgreSQL e Flyway
+- Maven Wrapper
+- JUnit Jupiter e Mockito para testes unitários
+- Acesso à internet para consultar clima e feriados
+
+## Executar o MVP
+
+### 1. Obter o projeto e configurar o banco
+
+```powershell
+git clone https://github.com/vvini-afk/Desafio_GC26.git
+cd Desafio_GC26
+```
+
+Configure uma instância PostgreSQL acessível à aplicação. No PowerShell, defina as configurações localmente antes de iniciar:
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:postgresql://<host>:5432/<database>"
+$env:SPRING_DATASOURCE_USERNAME = "<usuario>"
+$env:SPRING_DATASOURCE_PASSWORD = "<senha>"
+```
+
+Use as credenciais do seu próprio banco. Não as inclua no README, no Git ou em exemplos compartilhados.
+
+### 2. Inicializar o schema
+
+O Flyway roda na inicialização. Em um schema vazio, a migration V1 cria as tabelas do MVP e a V2 adiciona `regiao` e `multiplicador` à tabela `cidade`. Em um banco existente, o Flyway registra o baseline conforme a configuração do projeto e executa as migrations posteriores. O usuário do banco precisa poder criar e atualizar `flyway_schema_history` e aplicar migrations.
+
+O Hibernate está em modo `validate`: ele verifica o mapeamento, mas não cria nem altera tabelas. A view `public.vw_clientes_quebra_consumo` deve existir no banco e expor `id_cliente`; sua definição depende do schema e da regra de negócio adotados pelo ambiente.
+
+Para obter recomendações, o banco também precisa conter clientes, produtos e saldos em `estoque_erp`. O schema vazio criado pela V1 não inclui dados de catálogo. Apenas produtos ativos com saldo maior que zero são elegíveis. Para usar o multiplicador regional, preencha `cidade.regiao` e `cidade.multiplicador`.
+
+### 3. Iniciar a aplicação
+
+Windows PowerShell:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-Por padrão, a API fica disponível em `http://localhost:8080`. O Swagger UI fica em `http://localhost:8080/swagger-ui.html`.
+Linux/macOS:
 
-## Estrutura da aplicação
-
-```text
-src/main/java/com/desafiogc/RecommedationEngine/
-├── api/                 # Controllers REST e DTOs de entrada/saída
-├── config/              # Configuração de clientes HTTP
-├── integration/         # Clientes Open-Meteo e BrasilAPI
-├── model/               # Entidades e modelos de domínio
-├── repository/          # Repositórios Spring Data JPA
-└── service/             # Ingestão, contexto, calendário e recomendação
+```bash
+./mvnw spring-boot:run
 ```
 
-Fluxo principal: Controller → Service → Repository/JPA → PostgreSQL. Para recomendações, o serviço também consulta Open-Meteo e BrasilAPI.
+A API fica em `http://localhost:8080`. A documentação interativa fica em `http://localhost:8080/swagger-ui.html`.
 
-## Banco de dados
+Para rodar os testes unitários:
 
-O projeto espera as tabelas já criadas no schema `public`. O mapeamento atual usa estes nomes:
+```powershell
+.\mvnw.cmd test
+```
 
-| Tabela | Colunas usadas pela aplicação |
-|---|---|
-| `cliente` | `id_cliente`, `cnpj`, `nome`, `segmento`, `subsegmento`, `numero_celular`, `cep`, `ultima_compra`, `id_hierarquia`, `id_cidade` |
-| `cidade` | `id_cidade`, `nome`, `uf` |
-| `hierarquia` | `id_hierarquia` (referência armazenada no cliente) |
-| `produto` | `id_item`, `nome`, `cod_familia`, `preco_base`, `preco_minimo`, `ativo` |
-| `produto_complementar` | `produto_id`, `complementar_id` |
-| `pedido` | `id_pedido`, `data_pedido`, `id_cliente` |
-| `item_pedido` | `pedido_id`, `produto_id`, `quantidade`, `valor_unitario` |
-| `promocao` | `id_promocao`, `nome`, `produto_id`, `categoria`, `tipo_desconto`, `valor_desconto`, `inicio`, `fim`, `ativa` |
+### 4. Fazer uma chamada de recomendação
 
-A propriedade `categoria` do modelo de produto corresponde à coluna `cod_familia`. A cidade do cliente é obtida pela relação `cliente.id_cidade` → `cidade.id_cidade`; a API de recomendação usa o nome da cidade para consultar o clima.
+Use um `clienteId` existente no banco. Se o cliente não tiver cidade cadastrada, passe uma cidade para habilitar o contexto climático:
 
-Os itens do pedido são mapeados com chave composta `(pedido_id, produto_id)`, pois a tabela informada não possui uma coluna de identificador própria. Isso pressupõe no máximo uma linha por produto em cada pedido.
+```http
+GET http://localhost:8080/api/recomendacoes/1?cidade=Porto%20Alegre&limite=10
+```
 
-As tabelas `estoque_erp`, `notificacao` e outros campos do banco que não aparecem na lista de mapeamentos ainda não participam da lógica atual do recomendador.
+A API retorna até 10 recomendações. O parâmetro `limite` aceita valores de 1 a 100. Se não houver produto com motivo válido para recomendar, a resposta será `[]`.
 
-### Versionamento com Flyway
+## Endpoints principais
 
-As migrations SQL versionadas ficam em `src/main/resources/db/migration` e seguem o padrão `V<versão>__<descrição>.sql`. A migration `V1__criar_esquema_inicial.sql` cria as tabelas acima quando a aplicação inicia contra um schema `public` vazio.
-
-No primeiro início contra o banco Supabase já existente, o Flyway cria `flyway_schema_history` e registra o schema atual como baseline na versão `1`. Esse baseline não reaplica a V1 e não recria nem apaga as tabelas existentes. O Hibernate valida o mapeamento com `spring.jpa.hibernate.ddl-auto=validate`. Depois desse baseline, novas alterações devem ser adicionadas em migrations novas, como `V2__descricao_da_alteracao.sql`; migrations já aplicadas não devem ser editadas.
-
-O usuário PostgreSQL configurado para a aplicação precisa ter permissão para criar a tabela `flyway_schema_history` no schema `public` e executar as migrations futuras. O Flyway usa o mesmo datasource configurado para o Spring.
-
-## Endpoints
-
-Todos os exemplos usam `Content-Type: application/json` nos métodos `POST`.
-
-### Clientes
-
-| Método | Endpoint | Descrição |
+| Método | Endpoint | Uso |
 |---|---|---|
-| `GET` | `/api/clientes` | Lista até 50 clientes, sem expor CNPJ ou telefone. |
-| `POST` | `/api/clientes` | Cadastra cliente. A cidade pode ser informada pelo ID ou pelo nome de uma cidade já existente. |
+| `GET` | `/api/clientes` | Lista clientes cadastrados. |
+| `POST` | `/api/clientes` | Cadastra cliente. Use `cidadeId` ou `cidade` se a cidade já estiver na tabela `cidade`. |
+| `POST` | `/api/produtos` | Cadastra produto e possíveis relações de complementaridade. |
+| `POST` | `/api/pedidos` | Registra pedido e itens; também atualiza as associações de cross-sell. |
+| `POST` | `/api/promocoes` | Cadastra promoção por produto ou família. Tipos: `PERCENTUAL` e `VALOR_FIXO`. |
+| `GET` | `/api/recomendacoes/{clienteId}` | Retorna as recomendações ordenadas pelo score. Aceita `cidade` e `limite`. |
+| `GET` | `/api/recomendacoes/{clienteId}/diagnostico` | Mostra score e motivos, cidade/região, multiplicador e contagem de recompra, itens inéditos e cross-sell. |
+| `POST` | `/api/admin/processar-cross-sell` | Recalcula as associações a partir dos pedidos existentes. |
+| `GET` | `/api/contexto/clima?cidade={cidade}` | Consulta condições atuais no Open-Meteo. |
+| `GET` | `/api/contexto/feriados?ano={ano}&uf={UF}` | Consulta feriados pela BrasilAPI; `uf` é opcional. |
 
-Exemplo de cadastro:
+Todos os `POST` recebem `Content-Type: application/json`. Exemplo de cliente:
 
 ```http
 POST http://localhost:8080/api/clientes
@@ -95,259 +114,47 @@ Content-Type: application/json
 
 ```json
 {
-  "cnpj": "CNPJ_DE_TESTE",
-  "nome": "Cliente Exemplo",
+  "nome": "Cliente de Teste",
   "perfil": "Varejo",
-  "subsegmento": "Mercado",
-  "cep": "00000000",
-  "hierarquiaId": 1,
-  "cidadeId": 1,
-  "telefone": "TELEFONE_DE_TESTE",
-  "ultimaCompra": "2026-10-14"
+  "subsegmento": "Mercado"
 }
 ```
 
-`perfil` é persistido na coluna `segmento`. Para selecionar cidade pelo nome, substitua `cidadeId` por, por exemplo, `"cidade": "Cidade Exemplo"`. Use um ID ou nome cadastrado na tabela `cidade`.
+A resposta contém o ID gerado; use-o em `/api/recomendacoes/{clienteId}`. Para um cliente novo sem histórico, promoções ou contexto relevante, é esperado que a lista fique vazia.
 
-A consulta `GET /api/clientes` retorna até 50 resultados com identificador, nome, segmento (`perfil`), cidade e data da última compra.
+## Lógica da recomendação
 
-Exemplo de resposta:
+Cada candidato elegível começa com score 10. Esse valor-base, sozinho, não é motivo: produtos sem nenhum fator aplicável são removidos antes de ordenar e responder.
 
-```json
-[
-  {
-    "id": 1,
-    "nome": "Cliente Exemplo",
-    "perfil": "Varejo",
-    "cidade": "Cidade Exemplo",
-    "ultimaCompra": "2026-10-14"
-  }
-]
-```
+| Fator | Pontuação/regra |
+|---|---|
+| Recompra direta | `+5` se o ID exato do produto está no histórico. |
+| Afinidade de família | `+3` por item anterior da mesma família, até `+10`; aplica-se apenas a produtos ainda não comprados. |
+| Cross-sell inédito | `+20` se o produto ainda não foi comprado e complementa um item do histórico em `produto_complementar`. |
+| Promoção vigente | `+15`; promoção específica do produto tem prioridade sobre promoção por família. |
+| Clima | Calor: `+8`; frio: `+10`; chuva: `+6`, conforme temperatura, precipitação/código WMO e famílias configuradas. |
+| Feriado próximo | `+7` para famílias configuradas durante a janela de feriado. |
+| Região | Multiplica o score final pelo `cidade.multiplicador`. Se ausente ou inválido, usa `1`. |
 
-### Produtos
+As famílias climáticas seguem os códigos `produto.cod_familia` do catálogo Fruki. Frio contempla `0117 - VINHO VIDRO`, `0105 - CITRUS` e `0109 - SUCOS`; chuva contempla `0101 - REFRIGERANTE PET`, `0109 - SUCOS` e `0117 - VINHO VIDRO`. Essas associações são hipóteses comerciais, não resultados estatísticos de vendas. Os motivos do DTO explicam os fatores aplicados; `jaComprado`, `isCrossSell` e `pilares` identificam os pilares na resposta.
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `POST` | `/api/produtos` | Cadastra produto e relações opcionais de complementaridade. |
+O cross-sell calcula pares de itens que aparecem juntos em pedidos e mantém até três complementares ativos por produto. O endpoint administrativo permite recalcular as associações já existentes.
 
-Exemplo:
+## Persistência e integrações
 
-```http
-POST http://localhost:8080/api/produtos
-Content-Type: application/json
-```
+O projeto mapeia `cliente`, `cidade`, `hierarquia`, `produto`, `estoque_erp`, `pedido`, `item_pedido`, `produto_complementar`, `promocao` e `notificacao`. Os itens de pedido usam a chave composta `(pedido_id, produto_id)`. A entidade `Notificacao` e seu repositório permitem persistir mensagens do tipo `RECUPERACAO`; a consulta de clientes em quebra de consumo lê `vw_clientes_quebra_consumo`.
 
-```json
-{
-  "nome": "Produto Exemplo",
-  "categoria": "FAMILIA_DE_TESTE",
-  "produtosComplementaresIds": [],
-  "precoBase": 15.90,
-  "precoMinimo": 12.00
-}
-```
+- **Open-Meteo:** geocodifica cidade e fornece clima atual; não requer chave da aplicação.
+- **BrasilAPI:** fornece feriados; não requer chave da aplicação.
+- **Flyway:** migrations em `src/main/resources/db/migration`; migrations já aplicadas não devem ser editadas.
 
-A categoria é armazenada em `produto.cod_familia`. Os IDs em `produtosComplementaresIds` devem corresponder a produtos já cadastrados.
+## Limitações conhecidas
 
-### Pedidos
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `POST` | `/api/pedidos` | Registra um pedido e seus itens. |
-
-Exemplo:
-
-```http
-POST http://localhost:8080/api/pedidos
-Content-Type: application/json
-```
-
-```json
-{
-  "clienteId": 1,
-  "dataCompra": "2026-10-14",
-  "itens": [
-    {
-      "produtoId": 1,
-      "quantidade": 2,
-      "valorUnitario": 15.90
-    }
-  ]
-}
-```
-
-O cliente e os produtos informados precisam existir. Quantidades devem ser positivas. A data enviada como `yyyy-MM-dd` é persistida como timestamp no início daquele dia.
-
-### Promoções
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `POST` | `/api/promocoes` | Cadastra uma promoção por produto ou por categoria/família. |
-
-Exemplo por produto:
-
-```http
-POST http://localhost:8080/api/promocoes
-Content-Type: application/json
-```
-
-```json
-{
-  "nome": "Oferta de teste",
-  "produtoId": 1,
-  "tipoDesconto": "PERCENTUAL",
-  "valorDesconto": 10.00,
-  "inicio": "2026-10-14",
-  "fim": "2026-10-31"
-}
-```
-
-Tipos aceitos: `PERCENTUAL` e `VALOR_FIXO`. Para uma promoção por categoria, omita `produtoId` e envie `"categoria": "FAMILIA_DE_TESTE"`. Envie apenas um dos dois campos. O fim do período é considerado inclusivo.
-
-### Recomendações
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `GET` | `/api/recomendacoes/{clienteId}` | Recomenda produtos para o cliente; usa a cidade cadastrada quando disponível. |
-| `GET` | `/api/recomendacoes/{clienteId}?cidade={cidade}` | Permite informar uma cidade para esta consulta. |
-
-Exemplo:
-
-```http
-GET http://localhost:8080/api/recomendacoes/1
-```
-
-Cada item da resposta informa `produtoId`, `nomeProduto`, `categoria`, `score`, `motivos`, `promocaoId`, `precoBase`, `precoMinimo`, `valorDesconto`, `tipoDesconto`, `jaComprado`, `emPromocao`, `isCrossSell` e `pilares`. `valorDesconto` e `tipoDesconto` são nulos quando não há promoção. `jaComprado` indica compra do produto exato; `pilares` contém `HISTORICO` quando há compras anteriores da família, `PROMOCAO` quando há uma promoção vigente e `CROSS_SELL` quando o produto complementa um item comprado. O cliente precisa existir. Se clima ou calendário estiverem indisponíveis, a recomendação ainda pode ser calculada com os dados internos, e a resposta informa o fator contextual indisponível nos motivos.
-
-Exemplo de resposta:
-
-```json
-[
-  {
-    "produtoId": 1,
-    "nomeProduto": "Produto Exemplo",
-    "categoria": "FAMILIA_DE_TESTE",
-    "score": 30.0,
-    "motivos": [
-      "Categoria FAMILIA_DE_TESTE presente no histórico (1 item(ns), +5)",
-      "Promoção vigente: Oferta de teste (+15)"
-    ],
-    "promocaoId": 1,
-    "precoBase": 15.90,
-    "precoMinimo": 12.00,
-    "valorDesconto": 10.00,
-    "tipoDesconto": "PERCENTUAL",
-    "jaComprado": false,
-    "emPromocao": true,
-    "isCrossSell": false,
-    "pilares": [
-      "HISTORICO",
-      "PROMOCAO"
-    ]
-  }
-]
-```
-
-### Associação automática de produtos (Cross-Sell)
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `POST` | `/api/admin/processar-cross-sell` | Reprocessa o histórico de `item_pedido` e substitui as associações em `produto_complementar`. |
-
-O processamento também é executado automaticamente após cada pedido registrado em `POST /api/pedidos`. Para cada produto, o serviço considera os outros produtos presentes nos mesmos pedidos, calcula a frequência (quantos pedidos contêm o par) e a confiança direcional (frequência do par dividida pelo número de pedidos com o produto de origem). Seleciona até três complementares ativos, ordenando por confiança, frequência e ID. O endpoint administrativo permite recalcular o histórico existente manualmente.
-
-O processamento limpa as associações antigas e grava somente as recém-calculadas. As linhas são armazenadas no sentido consumido pelo pontuador: o produto candidato aponta para o produto comprado. Assim, o GET de recomendações encontra a relação e aplica `+20` pontos. A resposta informa quantos produtos foram analisados e quantos pares foram selecionados e persistidos:
-
-```json
-{
-  "produtosAnalisados": 0,
-  "paresSelecionados": 0,
-  "associacoesPersistidas": 0
-}
-```
-
-### Contexto: localização e clima
-
-| Método | Endpoint | Fonte |
-|---|---|---|
-| `GET` | `/api/contexto/localizacao?cidade={cidade}` | Open-Meteo Geocoding |
-| `GET` | `/api/contexto/clima?cidade={cidade}` | Open-Meteo Geocoding e Forecast |
-
-Exemplos:
-
-```http
-GET http://localhost:8080/api/contexto/localizacao?cidade=São%20Paulo
-GET http://localhost:8080/api/contexto/clima?cidade=São%20Paulo
-```
-
-A resposta de clima contém localização, horário da observação, temperatura, sensação térmica, umidade, precipitação, código WMO e vento.
-
-### Contexto: feriados
-
-| Método | Endpoint | Descrição |
-|---|---|---|
-| `GET` | `/api/contexto/feriados?ano={ano}` | Lista feriados nacionais. |
-| `GET` | `/api/contexto/feriados?ano={ano}&uf={UF}` | Consulta feriados com UF opcional. |
-
-Exemplos:
-
-```http
-GET http://localhost:8080/api/contexto/feriados?ano=2026
-GET http://localhost:8080/api/contexto/feriados?ano=2026&uf=SP
-```
-
-A consulta usa a BrasilAPI. O ano aceito pela API vai de 1900 a 2199, e a UF deve conter duas letras.
-
-## Como o score funciona (V1)
-
-O motor gera pontuações explicáveis, sem modelo de machine learning treinado. Produtos inativos são ignorados. Cada produto ativo começa com 10 pontos:
-
-| Fator | Pontos | Regra |
-|---|---:|---|
-| Histórico na mesma categoria/família | +5 por linha de item, até +25 | Conta itens de pedidos anteriores do cliente cuja categoria corresponde a `cod_familia`. |
-| Produto complementar | +20 | O produto recomendado está relacionado a um produto comprado na tabela `produto_complementar`. |
-| Promoção vigente | +15 | Aplica uma promoção correspondente ao produto ou à categoria. Se houver ambas, a promoção específica do produto tem prioridade. |
-| Clima quente ou frio | +8 | Calor a partir de 27 °C ou frio até 18 °C, se a família do produto corresponder às categorias configuradas. |
-| Chuva | +8 | Precipitação a partir de 0,5 mm ou código WMO de chuva, se a família corresponder às categorias configuradas. |
-| Feriado próximo | +7 | Feriado nacional hoje ou nos próximos 7 dias e família compatível. |
-
-Os limites, pesos e categorias de contexto podem ser ajustados em `application.properties` ou por variáveis de ambiente com prefixo `REC_`. As famílias do catálogo Supabase associadas a calor são águas, águas saborizadas, refrigerantes, citrus, sucos e energéticos; feriados consideram refrigerantes, citrus, sucos, cervejas e vinhos. Não há famílias associadas por padrão a frio ou chuva. A comparação ignora maiúsculas, minúsculas e acentos. Os produtos são ordenados por score decrescente; empates são ordenados pelo ID.
-
-## Integrações externas
-
-- **Open-Meteo:** busca a localização pelo nome da cidade e consulta o clima atual por coordenadas.
-- **BrasilAPI:** consulta feriados por ano e, opcionalmente, UF.
-
-As integrações precisam de acesso à internet. Falhas nas APIs externas não impedem a recomendação: o serviço registra um aviso e calcula o score sem o fator contextual indisponível.
-
-## Testes automatizados
-
-Os testes unitários estão em `src/test/java` e verificam regras do recomendador e da pontuação contextual sem iniciar a aplicação, acessar o banco de dados ou chamar as APIs externas. Os repositórios e serviços dependentes são simulados nos testes do motor.
-
-A cobertura atual inclui:
-
-- pontuação por categoria compatível com clima quente, incluindo normalização de acentos e maiúsculas/minúsculas;
-- pontuação por feriado próximo e propagação de avisos contextuais;
-- rejeição de limites de temperatura inconsistentes;
-- ordenação de recomendações por score e desempate pelo ID do produto;
-- score base e motivo apresentado quando não há fatores adicionais;
-- retorno `404` para cliente inexistente, sem consultar os demais componentes;
-- uso da cidade informada na consulta como substituta da cidade do cadastro.
-
-Para executar a suíte, use Java 21 e rode na raiz do projeto:
-
-```powershell
-.\mvnw.cmd test
-```
-
-Os testes não precisam de credenciais ou conexão com o PostgreSQL. Para executar a aplicação completa, as configurações de banco continuam necessárias conforme a seção [Executar localmente](#executar-localmente).
-
-## Limitações e próximos passos
-
-- O schema é administrado fora do Hibernate; alterações no banco precisam ser refletidas nos mapeamentos JPA.
-- O cálculo usa regras fixas e deve ter pesos e categorias avaliados com dados reais.
-- A tabela `estoque_erp` ainda não filtra recomendações por disponibilidade.
-- A chave composta dos itens de pedido pressupõe uma única linha de cada produto por pedido.
-- A API não implementa autenticação ou autorização.
-- Os endpoints de cadastro são voltados ao fluxo de ingestão V1; o projeto ainda pode evoluir com paginação completa, monitoramento e validação mais estrita.
+- O scoring usa regras e pesos fixos; eles precisam ser avaliados com dados reais de vendas.
+- A associação de frio e chuva a famílias de produto é uma hipótese comercial.
+- O multiplicador depende dos valores mantidos na tabela `cidade`; valores ausentes usam fator neutro `1`.
+- O filtro de estoque depende da atualização de `estoque_erp`; o motor não reserva nem sincroniza saldo com o ERP.
+- A view `vw_clientes_quebra_consumo` precisa ser criada e mantida pelo banco; o repositório espera a coluna `id_cliente`.
+- A persistência de notificações está mapeada, mas ainda não há endpoint de geração ou envio de mensagens.
+- A API não implementa autenticação/autorização nem paginação da lista de clientes.
+- Indisponibilidade das APIs externas remove somente o fator de clima/feriado; os fatores internos continuam sendo calculados.
