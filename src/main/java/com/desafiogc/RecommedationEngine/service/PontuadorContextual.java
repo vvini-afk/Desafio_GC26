@@ -17,7 +17,9 @@ public class PontuadorContextual {
     private final double temperaturaFria;
     private final double precipitacaoChuvaMm;
     private final int janelaFeriadoDias;
-    private final int pontosClima;
+    private final int pontosCalor;
+    private final int pontosFrio;
+    private final int pontosChuva;
     private final int pontosFeriado;
     private final List<String> categoriasCalor;
     private final List<String> categoriasFrio;
@@ -29,22 +31,27 @@ public class PontuadorContextual {
             @Value("${recommendation.context.temperature-cold-celsius:18}") double temperaturaFria,
             @Value("${recommendation.context.rain-minimum-mm:0.5}") double precipitacaoChuvaMm,
             @Value("${recommendation.context.holiday-window-days:7}") int janelaFeriadoDias,
-            @Value("${recommendation.context.weather-points:8}") int pontosClima,
+            @Value("${recommendation.context.weather-points:8}") int pontosCalor,
+            @Value("${recommendation.context.cold-points:10}") int pontosFrio,
+            @Value("${recommendation.context.rain-points:6}") int pontosChuva,
             @Value("${recommendation.context.holiday-points:7}") int pontosFeriado,
-            @Value("${recommendation.context.hot-categories:REFRIGERANTE|AGUAS|AGUA SABORIZADA|AGUA 20 LITROS|AGUA 5 LITROS|CITRUS|SUCOS|ENERGETICO}") String categoriasCalor,
-            @Value("${recommendation.context.cold-categories:}") String categoriasFrio,
-            @Value("${recommendation.context.rain-categories:}") String categoriasChuva,
-            @Value("${recommendation.context.holiday-categories:REFRIGERANTE|CITRUS|SUCOS|CERVEJA|VINHO}") String categoriasFeriado
+            @Value("${recommendation.context.hot-categories:0101 - REFRIGERANTE PET|0102 - REFRIGERANTE VIDRO|0103 - REFRIGERANTE LATA|0104 - AGUAS|0105 - CITRUS|0106 - AGUA 20 LITROS|0107 - AGUA 5 LITROS|0108 - AGUA SABORIZADA|0109 - SUCOS|0114 - ENERGETICO LATA|0115 - ENERGETICO PET}") String categoriasCalor,
+            @Value("${recommendation.context.cold-categories:0117 - VINHO VIDRO}") String categoriasFrio,
+            @Value("${recommendation.context.rain-categories:0101 - REFRIGERANTE PET|0109 - SUCOS|0117 - VINHO VIDRO}") String categoriasChuva,
+            @Value("${recommendation.context.holiday-categories:0101 - REFRIGERANTE PET|0102 - REFRIGERANTE VIDRO|0103 - REFRIGERANTE LATA|0105 - CITRUS|0109 - SUCOS|0112 - CERVEJA VIDRO|0113 - CERVEJA LATA|0117 - VINHO VIDRO}") String categoriasFeriado
     ) {
         if (temperaturaFria >= temperaturaQuente || precipitacaoChuvaMm < 0
-                || janelaFeriadoDias < 0 || pontosClima < 0 || pontosFeriado < 0) {
+                || janelaFeriadoDias < 0 || pontosCalor < 0 || pontosFrio < 0
+                || pontosChuva < 0 || pontosFeriado < 0) {
             throw new IllegalArgumentException("Os limites e pesos de contexto são inválidos.");
         }
         this.temperaturaQuente = temperaturaQuente;
         this.temperaturaFria = temperaturaFria;
         this.precipitacaoChuvaMm = precipitacaoChuvaMm;
         this.janelaFeriadoDias = janelaFeriadoDias;
-        this.pontosClima = pontosClima;
+        this.pontosCalor = pontosCalor;
+        this.pontosFrio = pontosFrio;
+        this.pontosChuva = pontosChuva;
         this.pontosFeriado = pontosFeriado;
         this.categoriasCalor = separarCategorias(categoriasCalor);
         this.categoriasFrio = separarCategorias(categoriasFrio);
@@ -58,21 +65,21 @@ public class PontuadorContextual {
         String categoria = NormalizadorCategoria.normalizar(produto.getCategoria());
         ClimaDTO clima = contexto.clima();
         if (clima != null) {
-            if (pontosClima > 0 && clima.temperaturaCelsius() >= temperaturaQuente
+            if (pontosCalor > 0 && clima.temperaturaCelsius() >= temperaturaQuente
                     && corresponde(categoria, categoriasCalor)) {
-                pontos += pontosClima;
+                pontos += pontosCalor;
                 motivos.add(String.format(Locale.ROOT, "Clima quente (%.1f °C) favorece a categoria %s (+%d)",
-                        clima.temperaturaCelsius(), produto.getCategoria(), pontosClima));
-            } else if (pontosClima > 0 && clima.temperaturaCelsius() <= temperaturaFria
+                        clima.temperaturaCelsius(), produto.getCategoria(), pontosCalor));
+            } else if (pontosFrio > 0 && clima.temperaturaCelsius() <= temperaturaFria
                     && corresponde(categoria, categoriasFrio)) {
-                pontos += pontosClima;
+                pontos += pontosFrio;
                 motivos.add(String.format(Locale.ROOT, "Clima frio (%.1f °C) favorece a categoria %s (+%d)",
-                        clima.temperaturaCelsius(), produto.getCategoria(), pontosClima));
+                        clima.temperaturaCelsius(), produto.getCategoria(), pontosFrio));
             }
-            if (pontosClima > 0 && estaChovendo(clima) && corresponde(categoria, categoriasChuva)) {
-                pontos += pontosClima;
+            if (pontosChuva > 0 && estaChovendo(clima) && corresponde(categoria, categoriasChuva)) {
+                pontos += pontosChuva;
                 motivos.add(String.format(Locale.ROOT, "Condição chuvosa atual favorece a categoria %s (+%d)",
-                        produto.getCategoria(), pontosClima));
+                        produto.getCategoria(), pontosChuva));
             }
         }
         if (pontosFeriado > 0 && !contexto.feriadosProximos().isEmpty()
