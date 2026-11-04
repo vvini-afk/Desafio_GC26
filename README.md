@@ -138,7 +138,7 @@ Cada candidato elegível começa com score 10. Esse valor-base, sozinho, não é
 
 As famílias climáticas seguem os códigos `produto.cod_familia` do catálogo Fruki. Frio contempla `0117 - VINHO VIDRO`, `0105 - CITRUS` e `0109 - SUCOS`; chuva contempla `0101 - REFRIGERANTE PET`, `0109 - SUCOS` e `0117 - VINHO VIDRO`. Essas associações são hipóteses comerciais, não resultados estatísticos de vendas. Os motivos do DTO explicam os fatores aplicados; `jaComprado`, `isCrossSell` e `pilares` identificam os pilares na resposta.
 
-O cross-sell calcula pares de itens que aparecem juntos em pedidos e mantém até três complementares ativos por produto. O endpoint administrativo permite recalcular as associações já existentes.
+O cross-sell calcula os pares de itens que aparecem juntos em pedidos e mantém até três complementares ativos por produto. O endpoint administrativo permite recalcular as associações já existentes.
 
 ## Persistência e integrações
 
