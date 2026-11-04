@@ -4,23 +4,38 @@ API REST do MVP de recomendação de produtos. O motor combina histórico de com
 
 ## Arquitetura resumida
 
-```text
-Cliente HTTP / Swagger
-        ↓
-api/       Controllers e DTOs REST
-        ↓
-service/   Cadastro, recomendação, scoring e contexto
-      ↙                 ↘
-repository/ JPA       integration/ APIs externas
-      ↓                 ↓
-PostgreSQL          Open-Meteo / BrasilAPI
+```mermaid
+flowchart LR
+    Caller[Cliente HTTP ou Swagger]
+    subgraph App[Spring Boot]
+        API[api<br/>Controllers e DTOs]
+        Service[service<br/>Casos de uso e regras]
+        Repo[repository<br/>Spring Data JPA]
+        Model[model<br/>Entidades e tipos de domínio]
+        Integration[integration<br/>Clientes HTTP externos]
+        Config[config<br/>Configuração HTTP]
+    end
+    DB[(PostgreSQL)]
+    Meteo[Open-Meteo]
+    Holidays[BrasilAPI]
+
+    Caller --> API
+    API --> Service
+    Service --> Repo
+    Repo --> DB
+    Service --> Integration
+    Integration --> Meteo
+    Integration --> Holidays
+    Service -. usa .-> Model
+    Repo -. mapeia .-> Model
+    Config -. configura .-> Integration
 ```
 
-- `api`: endpoints e contratos JSON.
-- `service`: regras de negócio, scoring, cross-sell e acesso ao contexto.
-- `model`: entidades e objetos de domínio.
-- `repository`: acesso a tabelas e à view de quebra de consumo.
-- `integration`: clientes HTTP para clima e feriados.
+**Fluxo de recomendação:** `RecomendacaoController` recebe o GET e chama `MotorRecomendacaoService`. O motor lê cliente, histórico, catálogo com estoque e promoções pelos repositórios; consulta o contexto por `ContextoRecomendacaoService`; calcula score com `PontuadorRecomendacao` e `PontuadorContextual`; então transforma o resultado em DTO.
+
+**Fluxo de cross-sell:** o cadastro de pedido ou o endpoint administrativo aciona `CrossSellService`, que lê os itens dos pedidos, calcula pares e atualiza as associações em `produto_complementar`.
+
+**Responsabilidade dos pacotes:** `api` expõe HTTP; `service` concentra os casos de uso; `repository` consulta e persiste dados; `model` mapeia entidades e tipos; `integration` acessa Open-Meteo e BrasilAPI; `config` configura os clientes HTTP. Notificações têm entidade e repositório para persistência, mas ainda não têm fluxo de envio ou endpoint.
 
 ## Tecnologias e pré-requisitos
 
@@ -47,8 +62,6 @@ $env:SPRING_DATASOURCE_URL = "jdbc:postgresql://<host>:5432/<database>"
 $env:SPRING_DATASOURCE_USERNAME = "<usuario>"
 $env:SPRING_DATASOURCE_PASSWORD = "<senha>"
 ```
-
-Use as credenciais do seu próprio banco. Não as inclua no README, no Git ou em exemplos compartilhados.
 
 ### 2. Inicializar o schema
 
@@ -102,8 +115,6 @@ A API retorna até 10 recomendações. O parâmetro `limite` aceita valores de 1
 | `GET` | `/api/recomendacoes/{clienteId}` | Retorna as recomendações ordenadas pelo score. Aceita `cidade` e `limite`. |
 | `GET` | `/api/recomendacoes/{clienteId}/diagnostico` | Mostra score e motivos, cidade/região, multiplicador e contagem de recompra, itens inéditos e cross-sell. |
 | `POST` | `/api/admin/processar-cross-sell` | Recalcula as associações a partir dos pedidos existentes. |
-| `GET` | `/api/contexto/clima?cidade={cidade}` | Consulta condições atuais no Open-Meteo. |
-| `GET` | `/api/contexto/feriados?ano={ano}&uf={UF}` | Consulta feriados pela BrasilAPI; `uf` é opcional. |
 
 Todos os `POST` recebem `Content-Type: application/json`. Exemplo de cliente:
 
@@ -138,7 +149,7 @@ Cada candidato elegível começa com score 10. Esse valor-base, sozinho, não é
 
 As famílias climáticas seguem os códigos `produto.cod_familia` do catálogo Fruki. Frio contempla `0117 - VINHO VIDRO`, `0105 - CITRUS` e `0109 - SUCOS`; chuva contempla `0101 - REFRIGERANTE PET`, `0109 - SUCOS` e `0117 - VINHO VIDRO`. Essas associações são hipóteses comerciais, não resultados estatísticos de vendas. Os motivos do DTO explicam os fatores aplicados; `jaComprado`, `isCrossSell` e `pilares` identificam os pilares na resposta.
 
-O cross-sell calcula os pares de itens que aparecem juntos em pedidos e mantém até três complementares ativos por produto. O endpoint administrativo permite recalcular as associações já existentes.
+O cross-sell calcula pares de itens que aparecem juntos em pedidos e mantém até três complementares ativos por produto. O endpoint administrativo permite recalcular as associações já existentes.
 
 ## Persistência e integrações
 
