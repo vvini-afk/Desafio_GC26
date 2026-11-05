@@ -97,7 +97,7 @@ public class ClienteConsultaController {
 
     @GetMapping("/quebra-consumo")
     public ResponseEntity<List<ClienteResumoDTO>> listarEmQuebraDeConsumo() {
-        List<ClienteResumoDTO> clientes = clienteRepository.findClientesEmQuebraDeConsumo()
+        List<ClienteResumoDTO> clientes = clienteRepository.listarClientesEmQuebraComResumo()
                 .stream()
                 .map(ClienteResumoDTO::from)
                 .toList();

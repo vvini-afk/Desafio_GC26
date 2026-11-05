@@ -38,6 +38,32 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
                    cid.regiao AS regiao,
                    c.cnpj AS cnpj,
                    c.cep AS cep,
+                   COALESCE(c.ultima_compra::date, q.ultima_compra) AS ultimaCompra,
+                   TRUE AS emQuebraConsumo,
+                   CASE
+                       WHEN q.dias_sem_comprar > q.intervalo_medio_dias * 3 THEN 'CRITICA'
+                       ELSE 'ALTA'
+                   END AS gravidadeQuebra,
+                   q.dias_sem_comprar AS diasSemComprar,
+                   q.intervalo_medio_dias AS intervaloMedioDias,
+                   (SELECT COUNT(*) FROM public.pedido p WHERE p.id_cliente = c.id_cliente) AS totalPedidos
+            FROM public.cliente c
+            LEFT JOIN public.cidade cid ON cid.id_cidade = c.id_cidade
+            INNER JOIN public.vw_clientes_quebra_consumo q ON q.id_cliente = c.id_cliente
+            ORDER BY q.dias_sem_comprar DESC, c.nome
+            """, nativeQuery = true)
+    List<ClienteCarteiraProjecao> listarClientesEmQuebraComResumo();
+
+    @Query(value = """
+            SELECT c.id_cliente AS id,
+                   c.nome AS nome,
+                   c.segmento AS perfil,
+                   c.subsegmento AS subsegmento,
+                   cid.nome AS cidade,
+                   cid.uf AS uf,
+                   cid.regiao AS regiao,
+                   c.cnpj AS cnpj,
+                   c.cep AS cep,
                    c.ultima_compra::date AS ultimaCompra,
                    (q.id_cliente IS NOT NULL) AS emQuebraConsumo,
                    CASE
