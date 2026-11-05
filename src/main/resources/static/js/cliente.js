@@ -13,6 +13,7 @@
 const estado = {
     cliente: null,
     recomendacoes: [],
+    catalogo: [],
     categoriaAtiva: 'PARA_VOCE', // Primeira aba/categoria ativa por padrão
     carrinho: new Map(), // produtoId -> { produto: RecomendacaoDTO, quantidade: number }
     termoBusca: '',
@@ -221,6 +222,7 @@ async function processarEnvioCnpj() {
 function reiniciarProcessoIdentificacao() {
     estado.cliente = null;
     estado.recomendacoes = [];
+    estado.catalogo = [];
     estado.carrinho.clear();
     atualizarResumoCarrinho();
     dom.btnAtalhoCatalogo.classList.add('hidden');
@@ -252,6 +254,19 @@ async function carregarCatalogoRecomendado(cliente) {
 
         const dados = await resposta.json();
         estado.recomendacoes = Array.isArray(dados) ? dados : [];
+
+        // A aba "Mais Produtos" representa o catálogo disponível, não apenas o ranking recomendado.
+        try {
+            const respostaCatalogo = await fetch('/api/produtos/catalogo');
+            if (respostaCatalogo.ok) {
+                const catalogo = await respostaCatalogo.json();
+                estado.catalogo = Array.isArray(catalogo) ? catalogo : estado.recomendacoes;
+            } else {
+                estado.catalogo = estado.recomendacoes;
+            }
+        } catch {
+            estado.catalogo = estado.recomendacoes;
+        }
         renderizarProdutosDaCategoriaAtiva();
     } catch (erro) {
         dom.productsList.innerHTML = `
@@ -281,7 +296,7 @@ function obterItensDaCategoria(categoriaKey) {
     let filtrados = [];
 
     if (categoriaKey === 'PROMOCOES') {
-        filtrados = estado.recomendacoes.filter(item =>
+        filtrados = estado.catalogo.filter(item =>
             Boolean(item.emPromocao) ||
             (item.promocaoId !== null && item.promocaoId !== undefined) ||
             (Array.isArray(item.pilares) && item.pilares.includes('PROMOCAO'))
@@ -300,8 +315,7 @@ function obterItensDaCategoria(categoriaKey) {
         const destaques = estado.recomendacoes.filter(item => Boolean(item.isCrossSell) || Boolean(item.emPromocao));
         filtrados = (destaques.length > 0 ? destaques : estado.recomendacoes).slice(0, 15);
     } else if (categoriaKey === 'MAIS') {
-        // Catálogo completo retornado pelo motor
-        filtrados = estado.recomendacoes;
+        filtrados = estado.catalogo;
     } else {
         filtrados = estado.recomendacoes;
     }

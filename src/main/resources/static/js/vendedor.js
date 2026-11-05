@@ -6,7 +6,7 @@
  * - GET /api/recomendacoes/{clienteId}/diagnostico?cidade={cidade}&limite=15 (Motor de Recomendação)
  */
 
-const COD_REPRESENTANTE_FIXO = 31906;
+const COD_REPRESENTANTE_PADRAO = 31906;
 
 const estadoVendedor = {
     vendedor: null,
@@ -28,6 +28,7 @@ const dom = {
     kpiClientesQuebra: document.getElementById('kpi-clientes-quebra'),
     kpiTotalCidades: document.getElementById('kpi-total-cidades'),
     totalClientesBadge: document.getElementById('total-clientes-badge'),
+    selectRepresentante: document.getElementById('vendedor-select-representante'),
     selectCliente: document.getElementById('vendedor-select-cliente'),
     painelInsightsCliente: document.getElementById('painel-insights-cliente'),
     clienteNome: document.getElementById('fv-cliente-nome'),
@@ -84,9 +85,9 @@ function exibirToast(mensagem) {
 /**
  * 1. Carrega Identificação do Vendedor e Carteira Real via GET /api/clientes/vendedor/{codRepresentante}
  */
-async function carregarPainelVendedor() {
+async function carregarPainelVendedor(codRepresentante) {
     try {
-        const resposta = await fetch(`/api/clientes/vendedor/${encodeURIComponent(COD_REPRESENTANTE_FIXO)}`);
+        const resposta = await fetch(`/api/clientes/vendedor/${encodeURIComponent(codRepresentante)}`);
         if (!resposta.ok) {
             throw new Error(`Status ${resposta.status}`);
         }
@@ -113,6 +114,38 @@ async function carregarPainelVendedor() {
     }
 }
 
+async function carregarRepresentantes() {
+    try {
+        const resposta = await fetch('/api/clientes/vendedores');
+        if (!resposta.ok) throw new Error(`Status ${resposta.status}`);
+        const representantes = await resposta.json();
+        dom.selectRepresentante.innerHTML = '<option value="">Selecione um representante...</option>';
+
+        representantes.forEach(representante => {
+            const opcao = document.createElement('option');
+            opcao.value = String(representante.codRepresentante);
+            opcao.textContent = `${representante.nomeVendedor} • Cód. ${representante.codRepresentante}`;
+            dom.selectRepresentante.appendChild(opcao);
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        const solicitado = params.get('codRepresentante') || localStorage.getItem('codRepresentante');
+        const existeSolicitado = representantes.some(rep => String(rep.codRepresentante) === String(solicitado));
+        const existePadrao = representantes.some(rep => rep.codRepresentante === COD_REPRESENTANTE_PADRAO);
+        const codigo = existeSolicitado ? solicitado
+            : existePadrao ? String(COD_REPRESENTANTE_PADRAO)
+                : representantes.length ? String(representantes[0].codRepresentante) : null;
+
+        if (!codigo) throw new Error('Nenhum representante foi encontrado no banco.');
+        dom.selectRepresentante.value = codigo;
+        await carregarPainelVendedor(codigo);
+    } catch (erro) {
+        dom.totalClientesBadge.textContent = 'Erro ao carregar';
+        dom.selectRepresentante.innerHTML = `<option value="">Falha ao consultar representantes (${escaparHtml(erro.message)})</option>`;
+        dom.selectCliente.innerHTML = '<option value="">Não foi possível carregar a carteira</option>';
+    }
+}
+
 function popularSeletorClientes(clientes) {
     dom.selectCliente.innerHTML = '<option value="">Selecione um cliente da carteira...</option>';
     dom.totalClientesBadge.textContent = `${clientes.length} clientes`;
@@ -136,8 +169,9 @@ function popularSeletorClientes(clientes) {
 /**
  * 2. Consulta Clima Real em Tempo Real via GET /api/contexto/clima?cidade={cidade}
  */
-async function carregarContextoClima(cidade) {
-    if (!cidade) {
+async function carregarContextoClima(cliente) {
+    const cidade = cliente?.cidade;
+    if (!cidade && !cliente?.cep) {
         dom.clienteClima.textContent = 'Cidade não informada';
         estadoVendedor.climaAtual = null;
         return;
@@ -145,7 +179,11 @@ async function carregarContextoClima(cidade) {
 
     dom.clienteClima.textContent = 'Consultando Open-Meteo...';
     try {
-        const res = await fetch(`/api/contexto/clima?cidade=${encodeURIComponent(cidade)}`);
+        const params = new URLSearchParams();
+        if (cidade) params.set('cidade', cidade);
+        if (cliente.uf) params.set('uf', cliente.uf);
+        if (cliente.cep) params.set('cep', cliente.cep);
+        const res = await fetch(`/api/contexto/clima?${params.toString()}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const clima = await res.json();
         estadoVendedor.climaAtual = clima;
@@ -225,11 +263,13 @@ async function carregarInsightsCliente(clienteId) {
     dom.totalInsights.textContent = 'Calculando...';
     dom.diagnosticoBar.classList.add('hidden');
 
-    const promessaClima = carregarContextoClima(cliente.cidade);
+    const promessaClima = carregarContextoClima(cliente);
 
     try {
         const params = new URLSearchParams();
         if (cliente.cidade) params.set('cidade', cliente.cidade);
+        if (cliente.uf) params.set('uf', cliente.uf);
+        if (cliente.cep) params.set('cep', cliente.cep);
         params.set('limite', '30');
 
         const resposta = await fetch(`/api/recomendacoes/${encodeURIComponent(cliente.id)}/diagnostico?${params.toString()}`);
@@ -347,6 +387,13 @@ function configurarEventos() {
         carregarInsightsCliente(e.target.value);
     });
 
+    dom.selectRepresentante.addEventListener('change', (e) => {
+        const codigo = e.target.value;
+        if (!codigo) return;
+        localStorage.setItem('codRepresentante', codigo);
+        carregarPainelVendedor(codigo);
+    });
+
     dom.btnCopiarPitch.addEventListener('click', () => {
         const texto = dom.pitchText.innerText || dom.pitchText.textContent;
         navigator.clipboard.writeText(texto).then(() => {
@@ -359,5 +406,5 @@ function configurarEventos() {
 
 document.addEventListener('DOMContentLoaded', () => {
     configurarEventos();
-    carregarPainelVendedor();
+    carregarRepresentantes();
 });
