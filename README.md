@@ -58,8 +58,6 @@ $env:SPRING_DATASOURCE_USERNAME = "<usuario>"
 $env:SPRING_DATASOURCE_PASSWORD = "<senha>"
 ```
 
-Use valores próprios do seu ambiente. Não coloque credenciais reais no README, no repositório ou em exemplos compartilhados.
-
 O Hibernate está configurado com `ddl-auto=validate`: valida o mapeamento Java contra o banco e não cria nem altera tabelas. O Flyway usa `src/main/resources/db/migration` e o schema `public`.
 
 #### Migrations
