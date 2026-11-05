@@ -42,7 +42,7 @@ public class CatalogoController {
                         || (promocao.getCategoria() != null && produto.getCategoria() != null
                         && promocao.getCategoria().equalsIgnoreCase(produto.getCategoria())))
                 .min(Comparator.comparing((Promocao promocao) ->
-                        !Objects.equals(promocao.getProdutoId(), produto.getId()))
+                                !Objects.equals(promocao.getProdutoId(), produto.getId()))
                         .thenComparing(Promocao::getId))
                 .orElse(null);
     }

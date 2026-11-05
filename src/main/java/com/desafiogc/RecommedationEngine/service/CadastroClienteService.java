@@ -20,13 +20,13 @@ public class CadastroClienteService {
     public Cliente criar(ClienteRequest request) {
         var cidade = request.cidadeId() != null
                 ? cidadeRepository.findById(request.cidadeId())
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                "Cidade não encontrada: " + request.cidadeId()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Cidade não encontrada: " + request.cidadeId()))
                 : request.cidade() == null || request.cidade().isBlank()
-                        ? null
-                        : cidadeRepository.findFirstByNomeIgnoreCaseOrderByIdAsc(request.cidade().trim())
-                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                        "Cidade não encontrada no cadastro do banco: " + request.cidade()));
+                ? null
+                : cidadeRepository.findFirstByNomeIgnoreCaseOrderByIdAsc(request.cidade().trim())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Cidade não encontrada no cadastro do banco: " + request.cidade()));
 
         return clienteRepository.save(new Cliente(
                 request.cnpj(), request.nome().trim(), request.perfil(), request.subsegmento(), request.cep(),

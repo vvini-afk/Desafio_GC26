@@ -7,15 +7,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class RecommedationEngineApplication {
 
-	public static void main(String[] args) {
-		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-		dotenv.entries().forEach(entry -> {
-			if (System.getProperty(entry.getKey()) == null) {
-				System.setProperty(entry.getKey(), entry.getValue());
-			}
-		});
+    public static void main(String[] args) {
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        dotenv.entries().forEach(entry -> {
+            if (System.getProperty(entry.getKey()) == null) {
+                System.setProperty(entry.getKey(), entry.getValue());
+            }
+        });
 
-		SpringApplication.run(RecommedationEngineApplication.class, args);
-	}
+        SpringApplication.run(RecommedationEngineApplication.class, args);
+    }
 
 }

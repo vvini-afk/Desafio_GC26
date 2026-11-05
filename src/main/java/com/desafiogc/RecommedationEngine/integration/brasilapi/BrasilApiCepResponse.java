@@ -6,7 +6,8 @@ public record BrasilApiCepResponse(
         String city,
         Location location
 ) {
-    public record Location(String type, Coordinates coordinates) { }
+    public record Location(String type, Coordinates coordinates) {
+    }
 
     public record Coordinates(Object longitude, Object latitude) {
         public Double longitudeValue() {

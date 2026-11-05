@@ -1,19 +1,13 @@
 package com.desafiogc.RecommedationEngine.service;
 
+import com.desafiogc.RecommedationEngine.model.produto.Produto;
 import com.desafiogc.RecommedationEngine.repository.PedidoRepository;
 import com.desafiogc.RecommedationEngine.repository.ProdutoRepository;
-import com.desafiogc.RecommedationEngine.model.produto.Produto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -103,9 +97,12 @@ public class CrossSellService {
         return new Resultado(catalogo.size(), paresSelecionados, paresSelecionados);
     }
 
-    private record ParProdutos(Integer produtoOrigem, Integer produtoDestino) { }
+    private record ParProdutos(Integer produtoOrigem, Integer produtoDestino) {
+    }
 
-    private record ParPontuado(Integer produtoDestino, long frequencia, double confianca) { }
+    private record ParPontuado(Integer produtoDestino, long frequencia, double confianca) {
+    }
 
-    public record Resultado(int produtosAnalisados, int paresSelecionados, int associacoesPersistidas) { }
+    public record Resultado(int produtosAnalisados, int paresSelecionados, int associacoesPersistidas) {
+    }
 }

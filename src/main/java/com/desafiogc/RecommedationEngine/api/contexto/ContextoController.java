@@ -1,9 +1,7 @@
 package com.desafiogc.RecommedationEngine.api.contexto;
 
-import java.util.List;
-
-import com.desafiogc.RecommedationEngine.model.contexto.FeriadoDTO;
 import com.desafiogc.RecommedationEngine.model.contexto.ClimaDTO;
+import com.desafiogc.RecommedationEngine.model.contexto.FeriadoDTO;
 import com.desafiogc.RecommedationEngine.model.contexto.LocalizacaoDTO;
 import com.desafiogc.RecommedationEngine.service.ContextoService;
 import com.desafiogc.RecommedationEngine.service.FeriadoService;
@@ -12,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/contexto")

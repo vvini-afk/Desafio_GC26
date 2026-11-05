@@ -1,13 +1,13 @@
 package com.desafiogc.RecommedationEngine.service;
 
-import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoGeocodingClient;
-import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoGeocodingResponse;
-import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoClient;
-import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoResponse;
 import com.desafiogc.RecommedationEngine.integration.brasilapi.BrasilApiCepClient;
 import com.desafiogc.RecommedationEngine.integration.brasilapi.BrasilApiCepResponse;
-import com.desafiogc.RecommedationEngine.model.contexto.LocalizacaoDTO;
+import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoClient;
+import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoGeocodingClient;
+import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoGeocodingResponse;
+import com.desafiogc.RecommedationEngine.integration.openmeteo.OpenMeteoResponse;
 import com.desafiogc.RecommedationEngine.model.contexto.ClimaDTO;
+import com.desafiogc.RecommedationEngine.model.contexto.LocalizacaoDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

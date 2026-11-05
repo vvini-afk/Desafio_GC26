@@ -115,25 +115,41 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
 
     interface ClienteCarteiraProjecao {
         Integer getId();
+
         String getNome();
+
         String getPerfil();
+
         String getSubsegmento();
+
         String getCidade();
+
         String getUf();
+
         String getRegiao();
+
         String getCnpj();
+
         String getCep();
+
         java.time.LocalDate getUltimaCompra();
+
         Boolean getEmQuebraConsumo();
+
         String getGravidadeQuebra();
+
         Double getDiasSemComprar();
+
         Double getIntervaloMedioDias();
+
         Long getTotalPedidos();
     }
 
     interface RepresentanteProjecao {
         Integer getIdHierarquia();
+
         Integer getCodRepresentante();
+
         String getNomeVendedor();
     }
 }

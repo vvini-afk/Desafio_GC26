@@ -49,8 +49,7 @@ public class Promocao {
             TipoDesconto tipoDesconto,
             BigDecimal valorDesconto,
             LocalDate inicio,
-            LocalDate fim)
-    {
+            LocalDate fim) {
         if (inicio == null || fim == null || fim.isBefore(inicio)) {
             throw new IllegalArgumentException("O período da promoção é inválido.");
         }

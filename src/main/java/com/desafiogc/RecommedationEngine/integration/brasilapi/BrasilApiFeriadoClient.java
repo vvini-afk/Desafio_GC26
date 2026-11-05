@@ -32,7 +32,8 @@ public class BrasilApiFeriadoClient {
                         return builder.build(ano);
                     })
                     .retrieve()
-                    .body(new org.springframework.core.ParameterizedTypeReference<List<FeriadoBrasilApiDTO>>() {});
+                    .body(new org.springframework.core.ParameterizedTypeReference<List<FeriadoBrasilApiDTO>>() {
+                    });
             return feriados == null ? List.of() : feriados;
         } catch (RestClientException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,

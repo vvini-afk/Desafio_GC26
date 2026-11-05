@@ -2,17 +2,13 @@ package com.desafiogc.RecommedationEngine.service;
 
 import com.desafiogc.RecommedationEngine.model.contexto.ContextoRecomendacao;
 import com.desafiogc.RecommedationEngine.model.produto.Produto;
-import com.desafiogc.RecommedationEngine.model.recomendacao.Promocao;
 import com.desafiogc.RecommedationEngine.model.recomendacao.PilarRecomendacao;
+import com.desafiogc.RecommedationEngine.model.recomendacao.Promocao;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -65,7 +61,7 @@ public class PontuadorRecomendacao {
                 .filter(p -> p.getProdutoId() != null
                         ? produto.getId().equals(p.getProdutoId())
                         : p.getCategoria() != null && NormalizadorCategoria.normalizar(produto.getCategoria())
-                                .equals(NormalizadorCategoria.normalizar(p.getCategoria())))
+                        .equals(NormalizadorCategoria.normalizar(p.getCategoria())))
                 .sorted(Comparator.comparing((Promocao p) -> p.getProdutoId() == null)
                         .thenComparing(Promocao::getId))
                 .findFirst().orElse(null);

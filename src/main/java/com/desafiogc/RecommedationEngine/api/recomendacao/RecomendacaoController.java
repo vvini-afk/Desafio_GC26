@@ -7,11 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -84,7 +80,7 @@ public class RecomendacaoController {
                 clienteId,
                 cidade == null || cidade.isBlank()
                         ? cliente.getCidade() != null ? cliente.getCidade()
-                                : cliente.getCep() == null ? null : "CEP " + cliente.getCep()
+                        : cliente.getCep() == null ? null : "CEP " + cliente.getCep()
                         : cidade.trim(),
                 cidadeRegional == null ? null : cidadeRegional.getNome(),
                 cidadeRegional == null ? null : cidadeRegional.getRegiao(),

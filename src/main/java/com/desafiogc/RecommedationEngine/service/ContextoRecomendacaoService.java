@@ -1,7 +1,7 @@
 package com.desafiogc.RecommedationEngine.service;
 
-import com.desafiogc.RecommedationEngine.model.contexto.ContextoRecomendacao;
 import com.desafiogc.RecommedationEngine.model.contexto.ClimaDTO;
+import com.desafiogc.RecommedationEngine.model.contexto.ContextoRecomendacao;
 import com.desafiogc.RecommedationEngine.model.contexto.FeriadoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

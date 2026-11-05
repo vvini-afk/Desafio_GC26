@@ -1,9 +1,8 @@
 package com.desafiogc.RecommedationEngine.service;
 
-import com.desafiogc.RecommedationEngine.model.pedido.Pedido;
-import com.desafiogc.RecommedationEngine.model.contexto.ContextoRecomendacao;
 import com.desafiogc.RecommedationEngine.model.cliente.Cidade;
-import com.desafiogc.RecommedationEngine.model.produto.Produto;
+import com.desafiogc.RecommedationEngine.model.contexto.ContextoRecomendacao;
+import com.desafiogc.RecommedationEngine.model.pedido.Pedido;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Promocao;
 import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 import com.desafiogc.RecommedationEngine.repository.ClienteRepository;
@@ -15,8 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;

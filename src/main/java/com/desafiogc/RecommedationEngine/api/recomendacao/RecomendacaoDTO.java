@@ -1,7 +1,7 @@
 package com.desafiogc.RecommedationEngine.api.recomendacao;
 
-import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 import com.desafiogc.RecommedationEngine.model.recomendacao.PilarRecomendacao;
+import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 
 import java.math.BigDecimal;
 import java.util.List;
