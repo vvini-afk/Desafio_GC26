@@ -86,12 +86,12 @@ Na raiz do projeto:
 ./mvnw spring-boot:run
 ```
 
-A aplicação fica em `http://localhost:8080`. A interface Swagger está em `http://localhost:8080/swagger-ui/index.html` e a especificação OpenAPI em `http://localhost:8080/v3/api-docs`.
+A aplicação fica em `https://desafio-gc26.onrender.com/`. A interface Swagger está em `http://localhost:8080/swagger-ui/index.html` e a especificação OpenAPI em `http://localhost:8080/v3/api-docs`.
 
 ### Telas
 
-- `http://localhost:8080/` ou `/index.html`: autoatendimento do cliente.
-- `http://localhost:8080/vendedor.html`: painel da força de vendas.
+- `https://desafio-gc26.onrender.com/` ou `https://desafio-gc26.onrender.com/index.html`: autoatendimento do cliente.
+- `https://desafio-gc26.onrender.com/vendedor.html`: painel da força de vendas.
 - `/vendedor.html?codRepresentante={codigo}`: abre o painel de um representante específico.
 
 O painel carrega os representantes do banco e permite trocar a seleção. Se nenhum código for informado, usa o representante padrão `31906` quando existir; caso contrário, seleciona o primeiro disponível.
