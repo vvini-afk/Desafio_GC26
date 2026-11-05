@@ -65,21 +65,31 @@ public class PontuadorContextual {
         String categoria = NormalizadorCategoria.normalizar(produto.getCategoria());
         ClimaDTO clima = contexto.clima();
         if (clima != null) {
+            motivos.add(String.format(Locale.ROOT,
+                    "Clima local consultado em %s: %.1f °C e precipitação de %.1f mm.",
+                    clima.cidade(), clima.temperaturaCelsius(), clima.precipitacaoMilimetros()));
+            double pontosAntesDoClima = pontos;
             if (pontosCalor > 0 && clima.temperaturaCelsius() >= temperaturaQuente
                     && corresponde(categoria, categoriasCalor)) {
                 pontos += pontosCalor;
-                motivos.add(String.format(Locale.ROOT, "Clima quente (%.1f °C) favorece a categoria %s (+%d)",
-                        clima.temperaturaCelsius(), produto.getCategoria(), pontosCalor));
+                motivos.add(String.format(Locale.ROOT,
+                        "Clima quente em %s (%.1f °C) favorece a categoria %s (+%d)",
+                        clima.cidade(), clima.temperaturaCelsius(), produto.getCategoria(), pontosCalor));
             } else if (pontosFrio > 0 && clima.temperaturaCelsius() <= temperaturaFria
                     && corresponde(categoria, categoriasFrio)) {
                 pontos += pontosFrio;
-                motivos.add(String.format(Locale.ROOT, "Clima frio (%.1f °C) favorece a categoria %s (+%d)",
-                        clima.temperaturaCelsius(), produto.getCategoria(), pontosFrio));
+                motivos.add(String.format(Locale.ROOT,
+                        "Clima frio em %s (%.1f °C) favorece a categoria %s (+%d)",
+                        clima.cidade(), clima.temperaturaCelsius(), produto.getCategoria(), pontosFrio));
             }
             if (pontosChuva > 0 && estaChovendo(clima) && corresponde(categoria, categoriasChuva)) {
                 pontos += pontosChuva;
                 motivos.add(String.format(Locale.ROOT, "Condição chuvosa atual favorece a categoria %s (+%d)",
                         produto.getCategoria(), pontosChuva));
+            }
+            if (pontos == pontosAntesDoClima) {
+                motivos.add("Condições climáticas consultadas, sem bônus para a família "
+                        + produto.getCategoria() + " neste momento.");
             }
         }
         if (pontosFeriado > 0 && !contexto.feriadosProximos().isEmpty()

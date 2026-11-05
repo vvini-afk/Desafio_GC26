@@ -38,6 +38,30 @@ public class RecomendacaoController {
                 .toList());
     }
 
+    @GetMapping("/quebra-consumo")
+    public ResponseEntity<LoteRecomendacoesDTO> recomendarClientesEmQuebra(
+            @RequestParam(defaultValue = "10") int limiteClientes,
+            @RequestParam(defaultValue = "10") int limitePorCliente
+    ) {
+        if (limiteClientes < 1 || limiteClientes > 25) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O limite de clientes deve estar entre 1 e 25.");
+        }
+        validarLimite(limitePorCliente);
+
+        var clientes = motorRecomendacaoService
+                .recomendarClientesEmQuebra(limiteClientes, limitePorCliente).stream()
+                .map(cliente -> new RecomendacoesClienteDTO(
+                        cliente.clienteId(),
+                        cliente.recomendacoes().stream().map(RecomendacaoDTO::from).toList()))
+                .toList();
+        return ResponseEntity.ok(new LoteRecomendacoesDTO(
+                clientes.size(),
+                clientes.stream().filter(cliente -> !cliente.recomendacoes().isEmpty()).count(),
+                clientes
+        ));
+    }
+
     @GetMapping("/{clienteId}/diagnostico")
     public ResponseEntity<DiagnosticoRecomendacaoDTO> diagnosticar(
             @PathVariable Integer clienteId,
@@ -58,7 +82,10 @@ public class RecomendacaoController {
 
         return ResponseEntity.ok(new DiagnosticoRecomendacaoDTO(
                 clienteId,
-                cidade == null || cidade.isBlank() ? cliente.getCidade() : cidade.trim(),
+                cidade == null || cidade.isBlank()
+                        ? cliente.getCidade() != null ? cliente.getCidade()
+                                : cliente.getCep() == null ? null : "CEP " + cliente.getCep()
+                        : cidade.trim(),
                 cidadeRegional == null ? null : cidadeRegional.getNome(),
                 cidadeRegional == null ? null : cidadeRegional.getRegiao(),
                 configurado,

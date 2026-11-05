@@ -13,7 +13,6 @@ import com.desafiogc.RecommedationEngine.repository.PromocaoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class MotorRecomendacaoService {
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
@@ -75,11 +73,33 @@ public class MotorRecomendacaoService {
                 .toList();
     }
 
+    /**
+     * Gera recomendações para os clientes retornados pela view de quebra de consumo.
+     */
+    public List<RecomendacoesCliente> recomendarClientesEmQuebra(int limiteClientes, int limitePorCliente) {
+        if (limiteClientes < 1 || limitePorCliente < 1) {
+            throw new IllegalArgumentException("Os limites devem ser maiores que zero.");
+        }
+
+        return clienteRepository.findClientesEmQuebraDeConsumo().stream()
+                .limit(limiteClientes)
+                .map(cliente -> new RecomendacoesCliente(
+                        cliente.getId(),
+                        recomendar(cliente.getId(), null, limitePorCliente)))
+                .toList();
+    }
+
     private static BigDecimal multiplicadorValido(Cidade cidade) {
         if (cidade == null || cidade.getMultiplicador() == null
                 || cidade.getMultiplicador().signum() <= 0) {
             return BigDecimal.ONE;
         }
         return cidade.getMultiplicador();
+    }
+
+    public record RecomendacoesCliente(Integer clienteId, List<Recomendacao> recomendacoes) {
+        public RecomendacoesCliente {
+            recomendacoes = recomendacoes == null ? List.of() : List.copyOf(recomendacoes);
+        }
     }
 }

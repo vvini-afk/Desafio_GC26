@@ -2,7 +2,6 @@ package com.desafiogc.RecommedationEngine.api.recomendacao;
 
 import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 import com.desafiogc.RecommedationEngine.model.recomendacao.PilarRecomendacao;
-import com.desafiogc.RecommedationEngine.model.recomendacao.TipoDesconto;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,12 +16,14 @@ public record RecomendacaoDTO(
         BigDecimal precoBase,
         BigDecimal precoMinimo,
         BigDecimal valorDesconto,
-        TipoDesconto tipoDesconto,
+        String tipoDesconto,
         boolean jaComprado,
         boolean emPromocao,
         boolean isCrossSell,
         List<PilarRecomendacao> pilares
 ) {
+    private static final BigDecimal VALOR_SEM_DESCONTO = BigDecimal.ZERO.setScale(2);
+
     public RecomendacaoDTO {
         motivos = motivos == null ? List.of() : List.copyOf(motivos);
         pilares = pilares == null ? List.of() : List.copyOf(pilares);
@@ -38,8 +39,8 @@ public record RecomendacaoDTO(
                 recomendacao.promocao() == null ? null : recomendacao.promocao().getId(),
                 recomendacao.produto().getPrecoBase(),
                 recomendacao.produto().getPrecoMinimo(),
-                recomendacao.promocao() == null ? null : recomendacao.promocao().getValorDesconto(),
-                recomendacao.promocao() == null ? null : recomendacao.promocao().getTipoDesconto(),
+                recomendacao.promocao() == null ? VALOR_SEM_DESCONTO : recomendacao.promocao().getValorDesconto(),
+                recomendacao.promocao() == null ? "SEM_DESCONTO" : recomendacao.promocao().getTipoDesconto().name(),
                 recomendacao.jaComprado(),
                 recomendacao.emPromocao(),
                 recomendacao.isCrossSell(),

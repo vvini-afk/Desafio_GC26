@@ -21,10 +21,15 @@ public class OpenMeteoGeocodingClient {
     }
 
     public OpenMeteoGeocodingResponse.Location buscarCidade(String cidade) {
+        return buscarCidade(cidade, null);
+    }
+
+    public OpenMeteoGeocodingResponse.Location buscarCidade(String cidade, String uf) {
         try {
+            String consulta = uf == null || uf.isBlank() ? cidade : cidade + ", " + uf.trim();
             OpenMeteoGeocodingResponse response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .queryParam("name", cidade)
+                            .queryParam("name", consulta)
                             .queryParam("count", 10)
                             .queryParam("language", "pt")
                             .queryParam("countryCode", "BR")

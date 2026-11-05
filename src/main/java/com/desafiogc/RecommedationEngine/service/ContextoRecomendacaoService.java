@@ -37,16 +37,20 @@ public class ContextoRecomendacaoService {
     }
 
     public ContextoRecomendacao consultar(String cidade) {
+        return consultar(cidade, null, null);
+    }
+
+    public ContextoRecomendacao consultar(String cidade, String uf, String cep) {
         LocalDate hoje = LocalDate.now(ZONA_BRASIL);
         List<String> avisos = new ArrayList<>();
         ClimaDTO clima = null;
         List<FeriadoDTO> feriadosProximos = new ArrayList<>();
 
-        if (cidade == null || cidade.isBlank()) {
-            avisos.add("Clima não considerado: cliente sem cidade cadastrada.");
+        if ((cidade == null || cidade.isBlank()) && (cep == null || cep.isBlank())) {
+            avisos.add("Clima não considerado: cliente sem cidade cadastrada e sem CEP.");
         } else {
             try {
-                clima = contextoService.consultarClimaAtual(cidade);
+                clima = contextoService.consultarClimaAtual(cidade, uf, cep);
             } catch (ResponseStatusException exception) {
                 log.warn("Não foi possível consultar o clima para a cidade '{}': {}", cidade, exception.getReason());
                 avisos.add("Clima indisponível; score calculado sem o fator climático.");
