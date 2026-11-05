@@ -1,11 +1,3 @@
-/**
- * Fruki - App Mobile Força de Vendas (vendedor.html)
- * Todos os dados são carregados diretamente do Backend Java + Supabase:
- * - GET /api/clientes/vendedor/{codRepresentante} (hierarquia, carteira e view quebra_de_consumo)
- * - GET /api/contexto/clima?cidade={cidade} (Open-Meteo tempo real)
- * - GET /api/recomendacoes/{clienteId}/diagnostico?cidade={cidade}&limite=15 (Motor de Recomendação)
- */
-
 const COD_REPRESENTANTE_PADRAO = 31906;
 
 const estadoVendedor = {
@@ -73,6 +65,7 @@ function obterIniciais(nome) {
 }
 
 let toastTimeout = null;
+
 function exibirToast(mensagem) {
     if (toastTimeout) clearTimeout(toastTimeout);
     dom.toast.textContent = mensagem;
@@ -82,9 +75,6 @@ function exibirToast(mensagem) {
     }, 2400);
 }
 
-/**
- * 1. Carrega Identificação do Vendedor e Carteira Real via GET /api/clientes/vendedor/{codRepresentante}
- */
 async function carregarPainelVendedor(codRepresentante) {
     try {
         const resposta = await fetch(`/api/clientes/vendedor/${encodeURIComponent(codRepresentante)}`);
@@ -96,7 +86,6 @@ async function carregarPainelVendedor(codRepresentante) {
         estadoVendedor.vendedor = painel;
         estadoVendedor.clientes = Array.isArray(painel.clientes) ? painel.clientes : [];
 
-        // Atualiza Dashboard do Vendedor com dados reais do Supabase (tabela hierarquia + cliente + quebra_de_consumo)
         dom.sellerAvatarLetters.textContent = obterIniciais(painel.nomeVendedor);
         dom.sellerName.textContent = painel.nomeVendedor || 'Representante';
         dom.sellerRole.textContent = `Representante Comercial • Cód. ${painel.codRepresentante}`;
@@ -166,9 +155,6 @@ function popularSeletorClientes(clientes) {
     }
 }
 
-/**
- * 2. Consulta Clima Real em Tempo Real via GET /api/contexto/clima?cidade={cidade}
- */
 async function carregarContextoClima(cliente) {
     const cidade = cliente?.cidade;
     if (!cidade && !cliente?.cep) {
@@ -205,9 +191,6 @@ async function carregarContextoClima(cliente) {
     }
 }
 
-/**
- * 3. Carrega Diagnóstico e Recomendações do Cliente via GET /api/recomendacoes/{clienteId}/diagnostico
- */
 async function carregarInsightsCliente(clienteId) {
     if (!clienteId) {
         dom.painelInsightsCliente.classList.add('hidden');
@@ -220,7 +203,6 @@ async function carregarInsightsCliente(clienteId) {
 
     estadoVendedor.clienteAtual = cliente;
 
-    // Atualiza cabeçalho do cliente
     dom.clienteNome.textContent = cliente.nome;
     dom.clienteCnpj.textContent = `CNPJ: ${cliente.cnpj || 'Não informado'}`;
     const subseg = cliente.subsegmento ? ` • ${cliente.subsegmento}` : '';
@@ -229,14 +211,12 @@ async function carregarInsightsCliente(clienteId) {
     dom.clienteCidadeBadge.textContent = cliente.cidade ? `📍 ${cliente.cidade}${ufTexto}` : '📍 Sul';
     dom.clienteUltimaCompra.textContent = cliente.ultimaCompra ? cliente.ultimaCompra : 'Sem registro';
 
-    // Atualiza link direto para simular este cliente no WhatsApp
     if (dom.btnAbrirWhatsappCliente) {
         dom.btnAbrirWhatsappCliente.href = cliente.cnpj
             ? `/index.html?cnpj=${encodeURIComponent(cliente.cnpj)}`
             : '/index.html';
     }
 
-    // Exibe alerta real de Quebra de Consumo (da view public.quebra_de_consumo no Supabase)
     if (cliente.emQuebraConsumo) {
         const dias = cliente.diasSemComprar !== null && cliente.diasSemComprar !== undefined
             ? Math.round(Number(cliente.diasSemComprar))
@@ -258,7 +238,6 @@ async function carregarInsightsCliente(clienteId) {
     dom.painelInsightsCliente.classList.remove('hidden');
     dom.estadoMensagem.classList.add('hidden');
 
-    // Dispara consulta de clima e diagnóstico em paralelo
     dom.listaInsights.innerHTML = '<div style="font-size: 0.82rem; color: var(--fv-text-muted); padding: 12px 0;">Consultando motor de recomendação e contexto...</div>';
     dom.totalInsights.textContent = 'Calculando...';
     dom.diagnosticoBar.classList.add('hidden');
@@ -312,9 +291,6 @@ function renderizarBarraDiagnostico(diagnostico) {
     dom.diagnosticoBar.classList.remove('hidden');
 }
 
-/**
- * 4. Renderiza os Cards de Insights e a Pauta de Abordagem Comercial
- */
 function renderizarInsights(produtos, cliente, diagnostico) {
     dom.totalInsights.textContent = `${produtos.length} ${produtos.length === 1 ? 'produto' : 'produtos'}`;
     dom.listaInsights.innerHTML = '';
@@ -375,9 +351,6 @@ function renderizarInsights(produtos, cliente, diagnostico) {
     });
 }
 
-/**
- * 5. Inicialização e Eventos
- */
 function configurarEventos() {
     dom.btnMenuHamburguer.addEventListener('click', () => {
         exibirToast('Menu lateral (demonstração)');

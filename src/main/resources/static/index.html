@@ -9,326 +9,327 @@
 </head>
 
 <body>
-    <div class="mobile-viewport">
-        <header class="wa-app-header">
-            <div class="wa-header-left">
-                <div class="wa-avatar-badge">
-                    <span class="wa-avatar-text">F</span>
-                    <span class="wa-verified-tick" title="Conta Comercial Verificada">✔</span>
-                </div>
-                <div class="wa-chat-info">
-                    <div class="wa-chat-title">
-                        <h2>Fruki Bebidas</h2>
-                        <span class="wa-business-badge">Oficial</span>
-                    </div>
-                    <span id="wa-connection-status" class="wa-status-text">online</span>
-                </div>
+<div class="mobile-viewport">
+    <header class="wa-app-header">
+        <div class="wa-header-left">
+            <div class="wa-avatar-badge">
+                <span class="wa-avatar-text">F</span>
+                <span class="wa-verified-tick" title="Conta Comercial Verificada">✔</span>
             </div>
-            <div class="wa-header-right">
-                <a href="/vendedor.html" class="wa-header-btn" title="Ir para Painel Força de Vendas">
-                    Vendedor
-                </a>
+            <div class="wa-chat-info">
+                <div class="wa-chat-title">
+                    <h2>Fruki Bebidas</h2>
+                    <span class="wa-business-badge">Oficial</span>
+                </div>
+                <span id="wa-connection-status" class="wa-status-text">online</span>
             </div>
-        </header>
+        </div>
+        <div class="wa-header-right">
+            <a href="/vendedor.html" class="wa-header-btn" title="Ir para Painel Força de Vendas">
+                Vendedor
+            </a>
+        </div>
+    </header>
 
-        <main id="chat-messages" class="wa-chat-canvas">
-            <div class="wa-chat-date-pill">HOJE</div>
+    <main id="chat-messages" class="wa-chat-canvas">
+        <div class="wa-chat-date-pill">HOJE</div>
 
-            <div class="wa-message-row bot" id="msg-saudacao-inicial">
-                <div class="wa-bubble">
-                    <p>
-                        Olá! 👋 Bem-vindo ao autoatendimento oficial da <strong>Fruki Bebidas</strong>.
-                    </p>
-                    <p style="margin-top: 6px;">
-                        Para identificarmos sua empresa e liberarmos o seu catálogo exclusivo com condições de hoje, por
-                        favor informe o seu <strong>CNPJ</strong>:
-                    </p>
-                    <span class="wa-msg-time" id="time-saudacao">10:00</span>
-                </div>
-            </div>
-
-            <div id="dynamic-messages"></div>
-        </main>
-
-        <footer id="wa-input-bar" class="wa-input-container">
-            <div class="wa-input-field-wrapper">
-                <input type="text" id="input-cnpj" class="wa-input"
-                    placeholder="Digite seu CNPJ (apenas números ou formatado)..." autocomplete="off"
-                    inputmode="numeric" aria-label="Digitar CNPJ do cliente">
-            </div>
-            <button type="button" id="btn-enviar-cnpj" class="wa-send-btn" aria-label="Enviar mensagem">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-                </svg>
-            </button>
-        </footer>
-
-        <button type="button" id="btn-atalho-catalogo" class="wa-floating-catalog-btn hidden"
-            aria-label="Abrir catálogo">
-            Ver Catálogo
-        </button>
-
-        <div id="modal-catalogo-top" class="wa-catalog-modal-backdrop hidden" role="dialog" aria-modal="true">
-            <div class="wa-catalog-dropdown-panel">
-                <div class="wa-catalog-top-nav">
-                    <div class="wa-top-nav-left">
-                        <button type="button" id="btn-fechar-catalogo-topo" class="wa-nav-icon-btn"
-                            aria-label="Voltar à conversa" title="Voltar ao chat">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
-                            </svg>
-                        </button>
-                        <h2>Catálogo</h2>
-                    </div>
-                    <div class="wa-top-nav-right">
-                        <button type="button" id="btn-nav-busca" class="wa-nav-icon-btn" aria-label="Pesquisar produtos"
-                            title="Buscar no catálogo">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <path
-                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z">
-                                </path>
-                            </svg>
-                        </button>
-                        <button type="button" id="btn-nav-carrinho" class="wa-nav-icon-btn" aria-label="Abrir carrinho"
-                            title="Ver carrinho">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-                                <path
-                                    d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z">
-                                </path>
-                            </svg>
-                            <span id="nav-cart-badge" class="wa-nav-badge hidden">0</span>
-                        </button>
-                        <button type="button" id="btn-nav-menu" class="wa-nav-icon-btn" aria-label="Mais opções"
-                            title="Opções">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                                <path
-                                    d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z">
-                                </path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="wa-catalog-search-bar" class="wa-search-expand-bar hidden">
-                    <div class="wa-search-input-box">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="#8696a0">
-                            <path
-                                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z">
-                            </path>
-                        </svg>
-                        <input type="text" id="input-busca-produtos" placeholder="Buscar por nome ou categoria..."
-                            autocomplete="off">
-                        <button type="button" id="btn-limpar-busca" aria-label="Limpar busca">✕</button>
-                    </div>
-                </div>
-
-                <div class="wa-catalog-scrollable-body" id="catalog-scroll-body">
-                    <div class="wa-shop-hero-card">
-                        <img src="/images/banner-loja.jpg" alt="Fruki Bebidas" class="wa-shop-hero-img"
-                            onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.classList.add('has-bg');"
-                            onerror="this.style.display='none';" style="display: none;">
-                        <div class="wa-shop-hero-overlay">
-                            <div class="wa-shop-title-row">
-                                <h3>Fruki Bebidas</h3>
-                                <span class="wa-shop-arrow">›</span>
-                            </div>
-                            <p class="wa-shop-description">
-                                Autoatendimento oficial direto da fábrica. Refrigerantes, águas, sucos e energéticos.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="wa-delivery-pincode-bar">
-                        <div class="wa-delivery-icon">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="#008069">
-                                <path
-                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="wa-delivery-text">
-                            <strong id="catalog-delivery-client">Entregar para Cliente</strong>
-                            <span id="catalog-delivery-city">📍 Região Sul • Toque para ver detalhes</span>
-                        </div>
-                    </div>
-
-                    <div class="wa-categories-section">
-                        <div class="wa-section-title-row">
-                            <h4>Categorias</h4>
-                            <span class="wa-see-all-link" id="btn-ver-todas-cat">Ver todas</span>
-                        </div>
-                        <div class="wa-category-cards-scroll">
-                            <div class="wa-cat-card active" data-categoria="PARA_VOCE" role="button" tabindex="0">
-                                <div class="wa-cat-box" style="background-color: #dcfce7;">
-                                    <img src="/images/categorias/para-voce.png" alt="Para Você" class="wa-cat-img"
-                                        onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
-                                        onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
-                                        style="display: none;">
-                                    <div class="wa-cat-fallback"
-                                        style="background: linear-gradient(135deg, #10b981, #059669);">
-                                        <span class="wa-cat-emoji">✨</span>
-                                    </div>
-                                    <div class="wa-cat-label-bar">
-                                        <span>Para Você</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="wa-cat-card" data-categoria="PROMOCOES" role="button" tabindex="0">
-                                <div class="wa-cat-box" style="background-color: #fef3c7;">
-                                    <img src="/images/categorias/promocoes.png" alt="Promoções" class="wa-cat-img"
-                                        onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
-                                        onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
-                                        style="display: none;">
-                                    <div class="wa-cat-fallback"
-                                        style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                                        <span class="wa-cat-emoji">🔥</span>
-                                    </div>
-                                    <div class="wa-cat-label-bar">
-                                        <span>Promoções</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="wa-cat-card" data-categoria="HISTORICO" role="button" tabindex="0">
-                                <div class="wa-cat-box" style="background-color: #e0f2fe;">
-                                    <img src="/images/categorias/historico.png" alt="Histórico" class="wa-cat-img"
-                                        onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
-                                        onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
-                                        style="display: none;">
-                                    <div class="wa-cat-fallback"
-                                        style="background: linear-gradient(135deg, #0284c7, #0369a1);">
-                                        <span class="wa-cat-emoji">🔄</span>
-                                    </div>
-                                    <div class="wa-cat-label-bar">
-                                        <span>Histórico</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="wa-cat-card" data-categoria="MAIS" role="button" tabindex="0">
-                                <div class="wa-cat-box" style="background-color: #ede9fe;">
-                                    <!-- Caminho pronto para imagem: /images/categorias/mais.png -->
-                                    <img src="/images/categorias/mais.png" alt="Mais" class="wa-cat-img"
-                                        onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
-                                        onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
-                                        style="display: none;">
-                                    <div class="wa-cat-fallback"
-                                        style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
-                                        <span class="wa-cat-emoji">📦</span>
-                                    </div>
-                                    <div class="wa-cat-label-bar">
-                                        <span>Mais</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="wa-products-section">
-                        <div class="wa-section-title-row">
-                            <h4 id="active-category-title">Para Você</h4>
-                            <span class="wa-see-all-link" id="active-category-count">0 produtos</span>
-                        </div>
-                        <div id="wa-products-list" class="wa-product-items-feed"></div>
-                    </div>
-                </div>
-
-                <div id="wa-cart-float" class="wa-cart-catalog-footer hidden">
-                    <div class="wa-cart-pill-left">
-                        <span id="cart-float-qty" class="wa-cart-badge">0</span>
-                        <div class="wa-cart-float-text">
-                            <strong>Sua Sacola</strong>
-                            <span id="cart-float-total">R$ 0,00</span>
-                        </div>
-                    </div>
-                    <button type="button" id="btn-abrir-checkout" class="wa-btn-checkout">
-                        Avançar →
-                    </button>
-                </div>
+        <div class="wa-message-row bot" id="msg-saudacao-inicial">
+            <div class="wa-bubble">
+                <p>
+                    Olá! 👋 Bem-vindo ao autoatendimento oficial da <strong>Fruki Bebidas</strong>.
+                </p>
+                <p style="margin-top: 6px;">
+                    Para identificarmos sua empresa e liberarmos o seu catálogo exclusivo com condições de hoje, por
+                    favor informe o seu <strong>CNPJ</strong>:
+                </p>
+                <span class="wa-msg-time" id="time-saudacao">10:00</span>
             </div>
         </div>
 
-        <div id="modal-checkout" class="wa-modal-backdrop hidden" role="dialog" aria-modal="true">
-            <div class="wa-bottom-sheet">
-                <div class="wa-sheet-header">
-                    <div class="wa-sheet-drag-handle"></div>
-                    <div class="wa-sheet-title-row">
-                        <div class="wa-checkout-steps-nav">
-                            <span class="wa-step-pill active" id="indicator-step-1">1. Sugestões</span>
-                            <span class="wa-step-arrow-nav">›</span>
-                            <span class="wa-step-pill" id="indicator-step-2">2. Confirmação</span>
+        <div id="dynamic-messages"></div>
+    </main>
+
+    <footer id="wa-input-bar" class="wa-input-container">
+        <div class="wa-input-field-wrapper">
+            <input type="text" id="input-cnpj" class="wa-input"
+                   placeholder="Digite seu CNPJ (apenas números ou formatado)..." autocomplete="off"
+                   inputmode="numeric" aria-label="Digitar CNPJ do cliente">
+        </div>
+        <button type="button" id="btn-enviar-cnpj" class="wa-send-btn" aria-label="Enviar mensagem">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+            </svg>
+        </button>
+    </footer>
+
+    <button type="button" id="btn-atalho-catalogo" class="wa-floating-catalog-btn hidden"
+            aria-label="Abrir catálogo">
+        Ver Catálogo
+    </button>
+
+    <div id="modal-catalogo-top" class="wa-catalog-modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="wa-catalog-dropdown-panel">
+            <div class="wa-catalog-top-nav">
+                <div class="wa-top-nav-left">
+                    <button type="button" id="btn-fechar-catalogo-topo" class="wa-nav-icon-btn"
+                            aria-label="Voltar à conversa" title="Voltar ao chat">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
+                        </svg>
+                    </button>
+                    <h2>Catálogo</h2>
+                </div>
+                <div class="wa-top-nav-right">
+                    <button type="button" id="btn-nav-busca" class="wa-nav-icon-btn" aria-label="Pesquisar produtos"
+                            title="Buscar no catálogo">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path
+                                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z">
+                            </path>
+                        </svg>
+                    </button>
+                    <button type="button" id="btn-nav-carrinho" class="wa-nav-icon-btn" aria-label="Abrir carrinho"
+                            title="Ver carrinho">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path
+                                    d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z">
+                            </path>
+                        </svg>
+                        <span id="nav-cart-badge" class="wa-nav-badge hidden">0</span>
+                    </button>
+                    <button type="button" id="btn-nav-menu" class="wa-nav-icon-btn" aria-label="Mais opções"
+                            title="Opções">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path
+                                    d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="wa-catalog-search-bar" class="wa-search-expand-bar hidden">
+                <div class="wa-search-input-box">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="#8696a0">
+                        <path
+                                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z">
+                        </path>
+                    </svg>
+                    <input type="text" id="input-busca-produtos" placeholder="Buscar por nome ou categoria..."
+                           autocomplete="off">
+                    <button type="button" id="btn-limpar-busca" aria-label="Limpar busca">✕</button>
+                </div>
+            </div>
+
+            <div class="wa-catalog-scrollable-body" id="catalog-scroll-body">
+                <div class="wa-shop-hero-card">
+                    <img src="/images/banner-loja.jpg" alt="Fruki Bebidas" class="wa-shop-hero-img"
+                         onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.classList.add('has-bg');"
+                         onerror="this.style.display='none';" style="display: none;">
+                    <div class="wa-shop-hero-overlay">
+                        <div class="wa-shop-title-row">
+                            <h3>Fruki Bebidas</h3>
+                            <span class="wa-shop-arrow">›</span>
                         </div>
-                        <button type="button" id="btn-fechar-checkout" class="wa-sheet-close-btn"
-                            aria-label="Fechar">✕</button>
+                        <p class="wa-shop-description">
+                            Autoatendimento oficial direto da fábrica. Refrigerantes, águas, sucos e energéticos.
+                        </p>
                     </div>
                 </div>
 
-                <div id="checkout-view-upsell" class="wa-checkout-view">
-                    <div class="wa-sheet-content">
-                        <div class="wa-suggestions-header">
-                            <h3 class="wa-suggestions-title">Aproveite para levar também:</h3>
+                <div class="wa-delivery-pincode-bar">
+                    <div class="wa-delivery-icon">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="#008069">
+                            <path
+                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="wa-delivery-text">
+                        <strong id="catalog-delivery-client">Entregar para Cliente</strong>
+                        <span id="catalog-delivery-city">📍 Região Sul • Toque para ver detalhes</span>
+                    </div>
+                </div>
+
+                <div class="wa-categories-section">
+                    <div class="wa-section-title-row">
+                        <h4>Categorias</h4>
+                        <span class="wa-see-all-link" id="btn-ver-todas-cat">Ver todas</span>
+                    </div>
+                    <div class="wa-category-cards-scroll">
+                        <div class="wa-cat-card active" data-categoria="PARA_VOCE" role="button" tabindex="0">
+                            <div class="wa-cat-box" style="background-color: #dcfce7;">
+                                <img src="/images/categorias/para-voce.png" alt="Para Você" class="wa-cat-img"
+                                     onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
+                                     onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+                                     style="display: none;">
+                                <div class="wa-cat-fallback"
+                                     style="background: linear-gradient(135deg, #10b981, #059669);">
+                                    <span class="wa-cat-emoji">✨</span>
+                                </div>
+                                <div class="wa-cat-label-bar">
+                                    <span>Para Você</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div id="checkout-sugestoes-list" class="wa-product-items-feed wa-sugestoes-feed"></div>
+                        <div class="wa-cat-card" data-categoria="PROMOCOES" role="button" tabindex="0">
+                            <div class="wa-cat-box" style="background-color: #fef3c7;">
+                                <img src="/images/categorias/promocoes.png" alt="Promoções" class="wa-cat-img"
+                                     onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
+                                     onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+                                     style="display: none;">
+                                <div class="wa-cat-fallback"
+                                     style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                    <span class="wa-cat-emoji">🔥</span>
+                                </div>
+                                <div class="wa-cat-label-bar">
+                                    <span>Promoções</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="wa-cat-card" data-categoria="HISTORICO" role="button" tabindex="0">
+                            <div class="wa-cat-box" style="background-color: #e0f2fe;">
+                                <img src="/images/categorias/historico.png" alt="Histórico" class="wa-cat-img"
+                                     onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
+                                     onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+                                     style="display: none;">
+                                <div class="wa-cat-fallback"
+                                     style="background: linear-gradient(135deg, #0284c7, #0369a1);">
+                                    <span class="wa-cat-emoji">🔄</span>
+                                </div>
+                                <div class="wa-cat-label-bar">
+                                    <span>Histórico</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="wa-cat-card" data-categoria="MAIS" role="button" tabindex="0">
+                            <div class="wa-cat-box" style="background-color: #ede9fe;">
+                                <!-- Caminho pronto para imagem: /images/categorias/mais.png -->
+                                <img src="/images/categorias/mais.png" alt="Mais" class="wa-cat-img"
+                                     onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
+                                     onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+                                     style="display: none;">
+                                <div class="wa-cat-fallback"
+                                     style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                                    <span class="wa-cat-emoji">📦</span>
+                                </div>
+                                <div class="wa-cat-label-bar">
+                                    <span>Mais</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wa-products-section">
+                    <div class="wa-section-title-row">
+                        <h4 id="active-category-title">Para Você</h4>
+                        <span class="wa-see-all-link" id="active-category-count">0 produtos</span>
+                    </div>
+                    <div id="wa-products-list" class="wa-product-items-feed"></div>
+                </div>
+            </div>
+
+            <div id="wa-cart-float" class="wa-cart-catalog-footer hidden">
+                <div class="wa-cart-pill-left">
+                    <span id="cart-float-qty" class="wa-cart-badge">0</span>
+                    <div class="wa-cart-float-text">
+                        <strong>Sua Sacola</strong>
+                        <span id="cart-float-total">R$ 0,00</span>
+                    </div>
+                </div>
+                <button type="button" id="btn-abrir-checkout" class="wa-btn-checkout">
+                    Avançar →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-checkout" class="wa-modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="wa-bottom-sheet">
+            <div class="wa-sheet-header">
+                <div class="wa-sheet-drag-handle"></div>
+                <div class="wa-sheet-title-row">
+                    <div class="wa-checkout-steps-nav">
+                        <span class="wa-step-pill active" id="indicator-step-1">1. Sugestões</span>
+                        <span class="wa-step-arrow-nav">›</span>
+                        <span class="wa-step-pill" id="indicator-step-2">2. Confirmação</span>
+                    </div>
+                    <button type="button" id="btn-fechar-checkout" class="wa-sheet-close-btn"
+                            aria-label="Fechar">✕
+                    </button>
+                </div>
+            </div>
+
+            <div id="checkout-view-upsell" class="wa-checkout-view">
+                <div class="wa-sheet-content">
+                    <div class="wa-suggestions-header">
+                        <h3 class="wa-suggestions-title">Aproveite para levar também:</h3>
                     </div>
 
-                    <div class="wa-sheet-footer">
-                        <div class="wa-final-total-row">
-                            <span>Subtotal atual:</span>
-                            <strong id="upsell-preview-total">R$ 0,00</strong>
+                    <div id="checkout-sugestoes-list" class="wa-product-items-feed wa-sugestoes-feed"></div>
+                </div>
+
+                <div class="wa-sheet-footer">
+                    <div class="wa-final-total-row">
+                        <span>Subtotal atual:</span>
+                        <strong id="upsell-preview-total">R$ 0,00</strong>
+                    </div>
+                    <button type="button" id="btn-avancar-confirmacao" class="wa-btn-submit-order">
+                        Avançar para Confirmação do Carrinho →
+                    </button>
+                </div>
+            </div>
+
+            <div id="checkout-view-confirmacao" class="wa-checkout-view hidden">
+                <div class="wa-sheet-content">
+                    <div class="wa-confirm-delivery-card">
+                        <div class="wa-confirm-delivery-header">
+                            <span class="wa-delivery-badge-dest">DESTINO & CLIENTE</span>
                         </div>
-                        <button type="button" id="btn-avancar-confirmacao" class="wa-btn-submit-order">
-                            Avançar para Confirmação do Carrinho →
+                        <div class="wa-confirm-delivery-body">
+                            <strong id="confirm-cliente-nome">Cliente</strong>
+                            <span id="confirm-cliente-cnpj" class="wa-confirm-sub">CNPJ: 00.000.000/0000-00</span>
+                            <span id="confirm-cliente-cidade" class="wa-confirm-sub">📍 Cidade</span>
+                        </div>
+                    </div>
+
+                    <section class="wa-sheet-section">
+                        <h4>🛒 Itens do Pedido</h4>
+                        <div id="checkout-itens-list" class="wa-checkout-items"></div>
+                        <div class="wa-subtotal-row">
+                            <span>Subtotal dos produtos:</span>
+                            <strong id="checkout-subtotal">R$ 0,00</strong>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="wa-sheet-footer">
+                    <div class="wa-final-total-row">
+                        <span>Total Final do Pedido:</span>
+                        <strong id="checkout-final-total">R$ 0,00</strong>
+                    </div>
+                    <div id="checkout-feedback" class="wa-feedback-msg hidden"></div>
+                    <div class="wa-confirm-actions-row">
+                        <button type="button" id="btn-voltar-upsell" class="wa-btn-secondary">
+                            ← Ofertas
                         </button>
-                    </div>
-                </div>
-
-                <div id="checkout-view-confirmacao" class="wa-checkout-view hidden">
-                    <div class="wa-sheet-content">
-                        <div class="wa-confirm-delivery-card">
-                            <div class="wa-confirm-delivery-header">
-                                <span class="wa-delivery-badge-dest">DESTINO & CLIENTE</span>
-                            </div>
-                            <div class="wa-confirm-delivery-body">
-                                <strong id="confirm-cliente-nome">Cliente</strong>
-                                <span id="confirm-cliente-cnpj" class="wa-confirm-sub">CNPJ: 00.000.000/0000-00</span>
-                                <span id="confirm-cliente-cidade" class="wa-confirm-sub">📍 Cidade</span>
-                            </div>
-                        </div>
-
-                        <section class="wa-sheet-section">
-                            <h4>🛒 Itens do Pedido</h4>
-                            <div id="checkout-itens-list" class="wa-checkout-items"></div>
-                            <div class="wa-subtotal-row">
-                                <span>Subtotal dos produtos:</span>
-                                <strong id="checkout-subtotal">R$ 0,00</strong>
-                            </div>
-                        </section>
-                    </div>
-
-                    <div class="wa-sheet-footer">
-                        <div class="wa-final-total-row">
-                            <span>Total Final do Pedido:</span>
-                            <strong id="checkout-final-total">R$ 0,00</strong>
-                        </div>
-                        <div id="checkout-feedback" class="wa-feedback-msg hidden"></div>
-                        <div class="wa-confirm-actions-row">
-                            <button type="button" id="btn-voltar-upsell" class="wa-btn-secondary">
-                                ← Ofertas
-                            </button>
-                            <button type="button" id="btn-concluir-pedido"
+                        <button type="button" id="btn-concluir-pedido"
                                 class="wa-btn-submit-order wa-btn-confirm-final">
-                                Confirmar e Enviar Pedido
-                            </button>
-                        </div>
+                            Confirmar e Enviar Pedido
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="/js/cliente.js"></script>
+<script src="/js/cliente.js"></script>
 </body>
 
 </html>

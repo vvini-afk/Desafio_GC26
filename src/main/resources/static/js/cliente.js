@@ -1,24 +1,12 @@
-/**
- * Fruki - Canal WhatsApp Mobile com Catálogo Estilo WhatsApp Business (JioMart)
- * Fluxo de Checkout em 2 Etapas:
- *   1. Opções de Up-Sell (Volume) & Cross-Sell
- *   2. Confirmação do Carrinho (Revisão & Envio POST /api/pedidos)
- *
- * Endpoints consumidos exclusivamente:
- * - GET /api/clientes/busca?cnpj={cnpj}
- * - GET /api/recomendacoes/{clienteId}?cidade={cidade}
- * - POST /api/pedidos
- */
-
 const estado = {
     cliente: null,
     recomendacoes: [],
     catalogo: [],
-    categoriaAtiva: 'PARA_VOCE', // Primeira aba/categoria ativa por padrão
-    carrinho: new Map(), // produtoId -> { produto: RecomendacaoDTO, quantidade: number }
+    categoriaAtiva: 'PARA_VOCE',
+    carrinho: new Map(),
     termoBusca: '',
-    etapaCheckout: 'UPSELL', // 'UPSELL' | 'CONFIRMACAO'
-    sugestoesCheckout: [] // 4 produtos recomendados para a etapa de sugestões
+    etapaCheckout: 'UPSELL',
+    sugestoesCheckout: []
 };
 
 const dom = {
@@ -49,7 +37,6 @@ const dom = {
     cartFloatTotal: document.getElementById('cart-float-total'),
     btnAbrirCheckout: document.getElementById('btn-abrir-checkout'),
 
-    // Elementos do Modal de Checkout (2 Etapas)
     modalCheckout: document.getElementById('modal-checkout'),
     btnFecharCheckout: document.getElementById('btn-fechar-checkout'),
     indicatorStep1: document.getElementById('indicator-step-1'),
@@ -84,7 +71,7 @@ function formatarPreco(valor) {
 
 function obterHoraAtual() {
     const agora = new Date();
-    return agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
 }
 
 function escaparHtml(texto) {
@@ -99,9 +86,6 @@ function scrollParaFinalDoChat() {
     }, 60);
 }
 
-/**
- * 1. Balões do Chat estilo WhatsApp
- */
 function adicionarMensagem(remetente, conteudoHtml) {
     const row = document.createElement('div');
     row.className = `wa-message-row ${remetente}`;
@@ -140,9 +124,6 @@ function removerAvisoDigitando() {
     if (el) el.remove();
 }
 
-/**
- * 2. Processa o CNPJ digitado
- */
 async function processarEnvioCnpj() {
     const valorDigitado = dom.inputCnpj.value.trim();
     if (!valorDigitado) return;
@@ -176,10 +157,8 @@ async function processarEnvioCnpj() {
         estado.carrinho.clear();
         atualizarResumoCarrinho();
 
-        // Pré-carrega o catálogo da API com limite amplo (até 100 itens)
         await carregarCatalogoRecomendado(cliente);
 
-        // Balão Interativo com o Botão "Ver Catálogo"
         const cidadeTexto = cliente.cidade ? ` em <strong>${escaparHtml(cliente.cidade)}</strong>` : '';
         const totalItens = estado.recomendacoes.length;
 
@@ -232,9 +211,6 @@ function reiniciarProcessoIdentificacao() {
     dom.inputCnpj.focus();
 }
 
-/**
- * 3. Consulta de Recomendações na API
- */
 async function carregarCatalogoRecomendado(cliente) {
     dom.catalogDeliveryClient.textContent = `Entregar para ${cliente.nome}`;
     dom.catalogDeliveryCity.textContent = cliente.cidade ? `📍 ${cliente.cidade} • Entrega programada` : '📍 Região Sul • Entrega programada';
@@ -255,7 +231,6 @@ async function carregarCatalogoRecomendado(cliente) {
         const dados = await resposta.json();
         estado.recomendacoes = Array.isArray(dados) ? dados : [];
 
-        // A aba "Mais Produtos" representa o catálogo disponível, não apenas o ranking recomendado.
         try {
             const respostaCatalogo = await fetch('/api/produtos/catalogo');
             if (respostaCatalogo.ok) {
@@ -277,9 +252,6 @@ async function carregarCatalogoRecomendado(cliente) {
     }
 }
 
-/**
- * 4. Controle do Catálogo Slide-Down
- */
 function abrirCatalogoHover() {
     dom.modalCatalogoTop.classList.remove('hidden');
 }
@@ -288,10 +260,6 @@ function fecharCatalogoHover() {
     dom.modalCatalogoTop.classList.add('hidden');
 }
 
-/**
- * 5. Categorização Exata: "Para Você", "Promoções", "Histórico", "Mais"
- * Primeira aba/categoria sempre "Para Você", seguida de "Promoções", "Histórico", "Mais".
- */
 function obterItensDaCategoria(categoriaKey) {
     let filtrados = [];
 
@@ -311,7 +279,6 @@ function obterItensDaCategoria(categoriaKey) {
             );
         }
     } else if (categoriaKey === 'PARA_VOCE') {
-        // Primeira aba/categoria: Cross-sell, promoções e top recomendações personalizadas
         const destaques = estado.recomendacoes.filter(item => Boolean(item.isCrossSell) || Boolean(item.emPromocao));
         filtrados = (destaques.length > 0 ? destaques : estado.recomendacoes).slice(0, 15);
     } else if (categoriaKey === 'MAIS') {
@@ -320,10 +287,9 @@ function obterItensDaCategoria(categoriaKey) {
         filtrados = estado.recomendacoes;
     }
 
-    // Aplica filtro de pesquisa se digitado
     if (estado.termoBusca) {
         const termo = estado.termoBusca.toLowerCase();
-        filtrados = filtrados.filter(item => 
+        filtrados = filtrados.filter(item =>
             (item.nomeProduto && item.nomeProduto.toLowerCase().includes(termo)) ||
             (item.categoria && item.categoria.toLowerCase().includes(termo))
         );
@@ -352,9 +318,6 @@ function selecionarCategoria(catKey) {
     renderizarProdutosDaCategoriaAtiva();
 }
 
-/**
- * 6. Renderização dos Produtos do Catálogo
- */
 function renderizarProdutosDaCategoriaAtiva() {
     dom.productsList.innerHTML = '';
     const produtos = obterItensDaCategoria(estado.categoriaAtiva);
@@ -377,12 +340,12 @@ function renderizarProdutosDaCategoriaAtiva() {
 
 function obterCorSolida(categoria) {
     const cat = String(categoria || '').toUpperCase();
-    if (cat.includes('REFRIGERANTE')) return '#fee2e2'; // Vermelho/guaraná suave
-    if (cat.includes('AGUA') || cat.includes('ÁGUA')) return '#e0f2fe'; // Ciano/água suave
-    if (cat.includes('SUCO') || cat.includes('CITRUS')) return '#fef3c7'; // Amarelo/laranja suave
-    if (cat.includes('ENERGETICO')) return '#f3e8ff'; // Roxo/energético suave
-    if (cat.includes('CERVEJA') || cat.includes('VINHO')) return '#fce7f3'; // Rosa suave
-    return '#f1f5f9'; // Neutro
+    if (cat.includes('REFRIGERANTE')) return '#fee2e2';
+    if (cat.includes('AGUA') || cat.includes('ÁGUA')) return '#e0f2fe';
+    if (cat.includes('SUCO') || cat.includes('CITRUS')) return '#fef3c7';
+    if (cat.includes('ENERGETICO')) return '#f3e8ff';
+    if (cat.includes('CERVEJA') || cat.includes('VINHO')) return '#fce7f3';
+    return '#f1f5f9';
 }
 
 function obterEmojiCategoria(categoria) {
@@ -398,7 +361,7 @@ function obterEmojiCategoria(categoria) {
 function calcularPrecoFinal(item) {
     const base = Number(item.precoBase) || 0;
     if (!item.emPromocao || !item.valorDesconto) {
-        return { precoFinal: base, precoAntigo: null, tagDesconto: '' };
+        return {precoFinal: base, precoAntigo: null, tagDesconto: ''};
     }
 
     let final = base;
@@ -413,7 +376,7 @@ function calcularPrecoFinal(item) {
         tag = `-${formatarPreco(desc)}`;
     }
 
-    return { precoFinal: final, precoAntigo: base, tagDesconto: tag };
+    return {precoFinal: final, precoAntigo: base, tagDesconto: tag};
 }
 
 function criarCardProdutoHorizontal(item) {
@@ -421,8 +384,8 @@ function criarCardProdutoHorizontal(item) {
     row.className = 'wa-product-row';
     row.dataset.id = String(item.produtoId);
 
-    const motivoDestaque = Array.isArray(item.motivos) && item.motivos.length > 0 
-        ? item.motivos[0] 
+    const motivoDestaque = Array.isArray(item.motivos) && item.motivos.length > 0
+        ? item.motivos[0]
         : '';
 
     const corFundo = obterCorSolida(item.categoria);
@@ -431,11 +394,11 @@ function criarCardProdutoHorizontal(item) {
     const noCarrinho = estado.carrinho.get(item.produtoId);
     const qtdAtual = noCarrinho ? noCarrinho.quantidade : 0;
 
-    const { precoFinal, precoAntigo, tagDesconto } = calcularPrecoFinal(item);
+    const {precoFinal, precoAntigo, tagDesconto} = calcularPrecoFinal(item);
 
     row.innerHTML = `
         <div class="wa-prod-img-box" style="background-color: ${corFundo};">
-            <!-- Caminho pronto para imagem do produto: /images/produtos/${item.produtoId}.png -->
+            ${item.produtoId}
             <img src="/images/produtos/${item.produtoId}.png" 
                  alt="${escaparHtml(item.nomeProduto)}" 
                  class="wa-prod-img" 
@@ -506,20 +469,16 @@ function renderizarControleQuantidade(container, item, quantidade) {
     container.appendChild(stepper);
 }
 
-/**
- * 7. Gerenciamento do Carrinho
- */
 function alterarQuantidade(item, novaQtd) {
     if (novaQtd <= 0) {
         estado.carrinho.delete(item.produtoId);
     } else {
-        estado.carrinho.set(item.produtoId, { produto: item, quantidade: novaQtd });
+        estado.carrinho.set(item.produtoId, {produto: item, quantidade: novaQtd});
     }
 
     sincronizarTodosOsCards(item.produtoId);
     atualizarResumoCarrinho();
 
-    // Se o modal de checkout estiver aberto, atualiza o conteúdo da etapa ativa
     if (!dom.modalCheckout.classList.contains('hidden')) {
         renderizarConteudoCheckout();
     }
@@ -539,16 +498,16 @@ function sincronizarTodosOsCards(produtoId) {
 function calcularTotais() {
     let qtdTotal = 0;
     let valorTotal = 0;
-    estado.carrinho.forEach(({ produto, quantidade }) => {
-        const { precoFinal } = calcularPrecoFinal(produto);
+    estado.carrinho.forEach(({produto, quantidade}) => {
+        const {precoFinal} = calcularPrecoFinal(produto);
         qtdTotal += quantidade;
         valorTotal += precoFinal * quantidade;
     });
-    return { qtdTotal, valorTotal };
+    return {qtdTotal, valorTotal};
 }
 
 function atualizarResumoCarrinho() {
-    const { qtdTotal, valorTotal } = calcularTotais();
+    const {qtdTotal, valorTotal} = calcularTotais();
 
     if (qtdTotal === 0) {
         dom.cartFloat.classList.add('hidden');
@@ -564,20 +523,14 @@ function atualizarResumoCarrinho() {
     dom.cartFloatTotal.textContent = formatarPreco(valorTotal);
 }
 
-/**
- * 8. FLUXO PÓS-COMPRA:
- *    ETAPA 1: SUGESTÕES DE VENDA ("Aproveite para levar também: - 4 produtos em cards do catálogo")
- *    ETAPA 2: CONFIRMAÇÃO DO CARRINHO (REVISÃO & ENVIAR POST /api/pedidos)
- */
 function abrirCheckout(etapaInicial = 'UPSELL') {
     if (estado.carrinho.size === 0) return;
-    
-    // Seleciona e força a criação dos 4 cards de sugestões de venda
+
     estado.sugestoesCheckout = obterQuatroSugestoesDeVenda();
     if (dom.checkoutSugestoesList) {
         dom.checkoutSugestoesList.innerHTML = '';
     }
-    
+
     navegarEtapaCheckout(etapaInicial);
     dom.modalCheckout.classList.remove('hidden');
 }
@@ -607,7 +560,7 @@ function navegarEtapaCheckout(novaEtapa) {
         renderizarEtapaConfirmacao();
     }
 
-    const { valorTotal } = calcularTotais();
+    const {valorTotal} = calcularTotais();
     dom.upsellPreviewTotal.textContent = formatarPreco(valorTotal);
     dom.checkoutSubtotal.textContent = formatarPreco(valorTotal);
     dom.checkoutFinalTotal.textContent = formatarPreco(valorTotal);
@@ -615,7 +568,7 @@ function navegarEtapaCheckout(novaEtapa) {
 }
 
 function renderizarConteudoCheckout() {
-    const { valorTotal } = calcularTotais();
+    const {valorTotal} = calcularTotais();
     dom.upsellPreviewTotal.textContent = formatarPreco(valorTotal);
     dom.checkoutSubtotal.textContent = formatarPreco(valorTotal);
     dom.checkoutFinalTotal.textContent = formatarPreco(valorTotal);
@@ -626,11 +579,7 @@ function renderizarConteudoCheckout() {
     }
 }
 
-/**
- * Seleciona exatamente 4 produtos recomendados para as sugestões de venda
- */
 function obterQuatroSugestoesDeVenda() {
-    // 1. Prioriza produtos recomendados que ainda não foram colocados no carrinho
     const foraDoCarrinho = estado.recomendacoes.filter(item => !estado.carrinho.has(item.produtoId));
 
     foraDoCarrinho.sort((a, b) => {
@@ -641,7 +590,6 @@ function obterQuatroSugestoesDeVenda() {
 
     let sugestoes = foraDoCarrinho.slice(0, 4);
 
-    // Se houver menos de 4 fora do carrinho, completa com outras recomendações
     if (sugestoes.length < 4) {
         const idsJaInclusos = new Set(sugestoes.map(s => s.produtoId));
         for (const item of estado.recomendacoes) {
@@ -656,10 +604,6 @@ function obterQuatroSugestoesDeVenda() {
     return sugestoes.slice(0, 4);
 }
 
-/**
- * Renderização da Etapa 1: Sugestões de Venda
- * Mensagem: "Aproveite para levar também: (Exibe 4 produtos em card, assim como no catalogo)"
- */
 function renderizarEtapaUpsell(forcarRecriacao = false) {
     if (!dom.checkoutSugestoesList) return;
 
@@ -683,30 +627,24 @@ function renderizarEtapaUpsell(forcarRecriacao = false) {
         return;
     }
 
-    // Exibe os 4 produtos em cards com o MESMO design do catálogo
     estado.sugestoesCheckout.forEach(item => {
         dom.checkoutSugestoesList.appendChild(criarCardProdutoHorizontal(item));
     });
 }
 
-/**
- * Renderização da Etapa 2: Confirmação do Carrinho
- */
 function renderizarEtapaConfirmacao() {
-    // 1. Dados do cliente e entrega
     if (estado.cliente) {
         dom.confirmClienteNome.textContent = estado.cliente.nome;
         dom.confirmClienteCnpj.textContent = `CNPJ: ${estado.cliente.cnpj || 'Cadastrado'}`;
         dom.confirmClienteCidade.textContent = `📍 ${estado.cliente.cidade || 'Região Sul'} • Entrega direta da fábrica`;
     }
 
-    // 2. Itens detalhados com controle fino de quantidade
     dom.checkoutItensList.innerHTML = '';
-    
-    estado.carrinho.forEach(({ produto, quantidade }) => {
+
+    estado.carrinho.forEach(({produto, quantidade}) => {
         const row = document.createElement('div');
         row.className = 'wa-item-checkout-row';
-        const { precoFinal } = calcularPrecoFinal(produto);
+        const {precoFinal} = calcularPrecoFinal(produto);
         const subtotal = precoFinal * quantidade;
 
         row.innerHTML = `
@@ -723,9 +661,6 @@ function renderizarEtapaConfirmacao() {
     });
 }
 
-/**
- * 9. Envio do Pedido Real via POST /api/pedidos
- */
 async function concluirPedido() {
     if (!estado.cliente || estado.carrinho.size === 0) return;
 
@@ -736,10 +671,10 @@ async function concluirPedido() {
 
     const hojeIso = new Date().toISOString().split('T')[0];
     const itens = [];
-    const { valorTotal } = calcularTotais();
+    const {valorTotal} = calcularTotais();
 
-    estado.carrinho.forEach(({ produto, quantidade }) => {
-        const { precoFinal } = calcularPrecoFinal(produto);
+    estado.carrinho.forEach(({produto, quantidade}) => {
+        const {precoFinal} = calcularPrecoFinal(produto);
         itens.push({
             produtoId: produto.produtoId,
             quantidade: quantidade,
@@ -756,7 +691,7 @@ async function concluirPedido() {
     try {
         const resposta = await fetch('/api/pedidos', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         });
 
@@ -772,7 +707,6 @@ async function concluirPedido() {
         estado.carrinho.clear();
         atualizarResumoCarrinho();
 
-        // Atualiza recomendações e histórico do cliente após gravar o pedido no Supabase
         carregarCatalogoRecomendado(estado.cliente);
 
         setTimeout(() => {
@@ -793,9 +727,6 @@ async function concluirPedido() {
     }
 }
 
-/**
- * 10. Inicialização e Eventos
- */
 function configurarEventos() {
     dom.timeSaudacao.textContent = obterHoraAtual();
 
@@ -809,7 +740,6 @@ function configurarEventos() {
     dom.btnAtalhoCatalogo.addEventListener('click', abrirCatalogoHover);
     dom.btnFecharCatalogoTopo.addEventListener('click', fecharCatalogoHover);
 
-    // Barra de Pesquisa Retrátil
     dom.btnNavBusca.addEventListener('click', () => {
         dom.waCatalogSearchBar.classList.toggle('hidden');
         if (!dom.waCatalogSearchBar.classList.contains('hidden')) {
@@ -833,7 +763,6 @@ function configurarEventos() {
         renderizarProdutosDaCategoriaAtiva();
     });
 
-    // Abrir carrinho pelo ícone do topo ou pelo botão flutuante abre a Etapa 1: Up-Sell
     dom.btnNavCarrinho.addEventListener('click', () => {
         if (estado.carrinho.size > 0) {
             abrirCheckout('UPSELL');
@@ -844,18 +773,14 @@ function configurarEventos() {
         abrirCheckout('UPSELL');
     });
 
-    // Navegação entre as etapas do Checkout:
-    // Etapa 1 (Up-Sell) -> Etapa 2 (Confirmação)
     dom.btnAvancarConfirmacao.addEventListener('click', () => {
         navegarEtapaCheckout('CONFIRMACAO');
     });
 
-    // Etapa 2 (Confirmação) -> Voltar para Etapa 1 (Up-Sell)
     dom.btnVoltarUpsell.addEventListener('click', () => {
         navegarEtapaCheckout('UPSELL');
     });
 
-    // Steppers no cabeçalho do checkout clicáveis para alternância rápida
     dom.indicatorStep1.addEventListener('click', () => {
         navegarEtapaCheckout('UPSELL');
     });
@@ -873,12 +798,10 @@ function configurarEventos() {
         alert(`Fruki Bebidas Oficial\nCliente: ${estado.cliente ? estado.cliente.nome : 'Não identificado'}\nCanal Digital de Autoatendimento B2B`);
     });
 
-    // "Ver todas" seleciona a categoria MAIS
     dom.btnVerTodasCat.addEventListener('click', () => {
         selecionarCategoria('MAIS');
     });
 
-    // Clique nas 4 categorias exatas: "Para Você", "Promoções", "Histórico", "Mais"
     dom.catCards.forEach(card => {
         card.addEventListener('click', () => {
             selecionarCategoria(card.dataset.categoria);
