@@ -53,8 +53,8 @@ public class CrossSellService {
 
         Map<Integer, Produto> catalogo = new HashMap<>();
         produtoRepository.findAll().forEach(produto -> catalogo.put(produto.getId(), produto));
-        catalogo.values().forEach(Produto::limparComplementares);
 
+        Map<Integer, List<Integer>> novosComplementares = new HashMap<>();
         int paresSelecionados = 0;
         for (Produto produto : catalogo.values()) {
             long pedidosDoProduto = pedidosPorProduto.getOrDefault(produto.getId(), 0L);
@@ -80,7 +80,23 @@ public class CrossSellService {
 
             for (ParPontuado par : melhores) {
                 paresSelecionados++;
-                catalogo.get(par.produtoDestino()).adicionarComplementar(produto.getId());
+                novosComplementares
+                        .computeIfAbsent(par.produtoDestino(), ignorado -> new ArrayList<>())
+                        .add(produto.getId());
+            }
+        }
+
+        for (Produto produto : catalogo.values()) {
+            List<Integer> desejados = novosComplementares.getOrDefault(produto.getId(), List.of());
+            List<Integer> atuais = produto.getComplementaresIds() == null
+                    ? List.of()
+                    : produto.getComplementaresIds();
+            boolean iguais = atuais.size() == desejados.size() && atuais.containsAll(desejados);
+            if (!iguais) {
+                produto.limparComplementares();
+                for (Integer complementarId : desejados) {
+                    produto.adicionarComplementar(complementarId);
+                }
             }
         }
 

@@ -13,6 +13,7 @@ import com.desafiogc.RecommedationEngine.repository.PromocaoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MotorRecomendacaoService {
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;

@@ -9,6 +9,10 @@ import java.util.List;
 
 public interface ProdutoRepository extends JpaRepository<Produto, Integer> {
 
+    @Override
+    @EntityGraph(attributePaths = "complementaresIds")
+    List<Produto> findAll();
+
     @EntityGraph(attributePaths = "complementaresIds")
     @Query("""
             select p from Produto p
