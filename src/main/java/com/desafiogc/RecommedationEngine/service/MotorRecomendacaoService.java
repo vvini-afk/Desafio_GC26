@@ -47,7 +47,8 @@ public class MotorRecomendacaoService {
         Cidade cidadeDoCliente = cliente.getCidadeRef();
         BigDecimal multiplicadorRegional = multiplicadorValido(cidadeDoCliente);
         String regiao = cidadeDoCliente == null ? null : cidadeDoCliente.getRegiao();
-        ContextoRecomendacao contexto = contextoRecomendacaoService.consultar(cidade);
+        String uf = cidadeDoCliente == null ? null : cidadeDoCliente.getUf();
+        ContextoRecomendacao contexto = contextoRecomendacaoService.consultar(cidade, uf, cliente.getCep());
 
         List<Pedido> historico = pedidoRepository.findByCliente_Id(clienteId);
         Map<String, Long> comprasPorCategoria = historico.stream()

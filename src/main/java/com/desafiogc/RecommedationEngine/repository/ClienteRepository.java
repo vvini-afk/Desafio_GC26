@@ -37,6 +37,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
                    cid.uf AS uf,
                    cid.regiao AS regiao,
                    c.cnpj AS cnpj,
+                   c.cep AS cep,
                    c.ultima_compra::date AS ultimaCompra,
                    (q.id_cliente IS NOT NULL) AS emQuebraConsumo,
                    CASE
@@ -69,6 +70,16 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
             @Param("codRepresentante") Integer codRepresentante);
 
     @Query(value = """
+            SELECT h.id_hierarquia AS idHierarquia,
+                   h.cod_representante AS codRepresentante,
+                   h.nome_vendedor AS nomeVendedor
+            FROM public.hierarquia h
+            WHERE h.cod_representante IS NOT NULL
+            ORDER BY h.nome_vendedor
+            """, nativeQuery = true)
+    List<RepresentanteProjecao> listarRepresentantes();
+
+    @Query(value = """
             SELECT c.*
             FROM public.cliente c
             WHERE regexp_replace(c.cnpj, '\\D', '', 'g') = regexp_replace(:cnpj, '\\D', '', 'g')
@@ -85,6 +96,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
         String getUf();
         String getRegiao();
         String getCnpj();
+        String getCep();
         java.time.LocalDate getUltimaCompra();
         Boolean getEmQuebraConsumo();
         String getGravidadeQuebra();

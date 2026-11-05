@@ -25,6 +25,13 @@ public class ClienteConsultaController {
 
     private final ClienteRepository clienteRepository;
 
+    @GetMapping("/vendedores")
+    public ResponseEntity<List<RepresentanteDTO>> listarRepresentantes() {
+        return ResponseEntity.ok(clienteRepository.listarRepresentantes().stream()
+                .map(RepresentanteDTO::from)
+                .toList());
+    }
+
     @GetMapping
     public ResponseEntity<List<ClienteResumoDTO>> listarClientes(
             @RequestParam(required = false) Integer codRepresentante

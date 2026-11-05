@@ -22,8 +22,12 @@ public class ContextoController {
     private final FeriadoService feriadoService;
 
     @GetMapping("/clima")
-    public ClimaDTO consultarClimaAtual(@RequestParam String cidade) {
-        return contextoService.consultarClimaAtual(cidade);
+    public ClimaDTO consultarClimaAtual(
+            @RequestParam(required = false) String cidade,
+            @RequestParam(required = false) String uf,
+            @RequestParam(required = false) String cep
+    ) {
+        return contextoService.consultarClimaAtual(cidade, uf, cep);
     }
 
     @GetMapping("/localizacao")
