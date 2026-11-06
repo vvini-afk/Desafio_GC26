@@ -29,6 +29,19 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     List<Cliente> findClientesEmQuebraDeConsumo();
 
     @Query(value = """
+            SELECT DISTINCT c.*
+            FROM public.cliente c
+            INNER JOIN public.pedido pe ON pe.id_cliente = c.id_cliente
+            INNER JOIN public.item_pedido ip ON ip.pedido_id = pe.id_pedido
+            INNER JOIN public.produto p ON p.id_item = ip.produto_id
+            WHERE (:produtoId IS NOT NULL AND p.id_item = :produtoId)
+               OR (:produtoId IS NULL AND LOWER(BTRIM(p.cod_familia)) = LOWER(BTRIM(:categoria)))
+            """, nativeQuery = true)
+    List<Cliente> findClientesElegiveisParaPromocao(
+            @Param("produtoId") Integer produtoId,
+            @Param("categoria") String categoria);
+
+    @Query(value = """
             SELECT c.id_cliente AS id,
                    c.nome AS nome,
                    c.segmento AS perfil,

@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class CadastroPromocaoService {
     private final ProdutoRepository produtoRepository;
     private final PromocaoRepository promocaoRepository;
+    private final NotificacaoService notificacaoService;
 
     @Transactional
     public Promocao criar(PromocaoRequest request) {
@@ -29,9 +30,11 @@ public class CadastroPromocaoService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto da promoção não encontrado.");
         }
         try {
-            return promocaoRepository.save(new Promocao(request.nome().trim(), request.produtoId(),
+            Promocao promocao = promocaoRepository.save(new Promocao(request.nome().trim(), request.produtoId(),
                     request.categoria() == null ? null : request.categoria().trim(), request.tipoDesconto(),
                     request.valorDesconto(), request.inicio(), request.fim()));
+            notificacaoService.notificarPromocao(promocao);
+            return promocao;
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage());
         }
