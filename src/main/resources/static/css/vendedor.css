@@ -632,3 +632,62 @@ body {
     line-height: 1.4;
     max-width: 260px;
 }
+
+@media (max-width: 480px) {
+    .fv-app-header {
+        height: 64px;
+    }
+
+    .fv-scroll-body {
+        padding: 16px 16px calc(48px + env(safe-area-inset-bottom));
+        gap: 16px;
+    }
+
+    .fv-seller-dashboard-card {
+        padding: 20px;
+        gap: 18px;
+    }
+
+    .fv-seller-profile-row {
+        gap: 16px;
+    }
+
+    .fv-seller-avatar {
+        width: 58px;
+        height: 58px;
+    }
+
+    .fv-seller-kpis-grid {
+        padding: 14px 10px;
+        gap: 10px;
+    }
+
+    .fv-kpi-item {
+        min-height: 48px;
+        justify-content: center;
+    }
+
+    .fv-client-selector-section,
+    .fv-client-card {
+        padding: 16px;
+    }
+
+    .fv-client-card {
+        gap: 14px;
+    }
+
+    .fv-insights-feed {
+        gap: 14px;
+    }
+
+    .fv-insight-card {
+        min-height: 148px;
+        padding: 16px;
+        gap: 10px;
+    }
+
+    .fv-motivo-item {
+        font-size: 0.78rem;
+        line-height: 1.5;
+    }
+}

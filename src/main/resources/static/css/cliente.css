@@ -1313,3 +1313,41 @@ body {
         opacity: 1;
     }
 }
+
+@media (max-width: 480px) {
+    .wa-chat-canvas {
+        padding: 16px 12px calc(88px + env(safe-area-inset-bottom));
+        gap: 14px;
+    }
+
+    .wa-bubble {
+        padding: 12px 14px;
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    .wa-shop-hero-card {
+        min-height: 148px;
+        padding: 18px;
+        margin: 14px 14px 8px;
+    }
+
+    .wa-product-row {
+        min-height: 112px;
+        padding: 16px 0;
+        gap: 14px;
+    }
+
+    .wa-prod-img-box {
+        width: 76px;
+        height: 76px;
+    }
+
+    .wa-prod-details {
+        gap: 4px;
+    }
+
+    .wa-input-container {
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    }
+}
