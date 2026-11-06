@@ -50,17 +50,9 @@ public class MotorRecomendacaoService {
         ContextoRecomendacao contexto = contextoRecomendacaoService.consultar(cidade, uf, cliente.getCep());
 
         List<Pedido> historico = pedidoRepository.findByCliente_Id(clienteId);
-        Map<String, Long> comprasPorCategoria = historico.stream()
-                .flatMap(pedido -> pedido.getItens().stream())
-                .collect(Collectors.groupingBy(
-                        item -> NormalizadorCategoria.normalizar(item.getProduto().getCategoria()), Collectors.counting()));
-        Set<Integer> produtosComprados = historico.stream()
-                .flatMap(pedido -> pedido.getItens().stream())
-                .map(item -> item.getProduto().getId())
-                .collect(Collectors.toSet());
-        List<Promocao> promocoesVigentes = promocaoRepository.findAll().stream()
-                .filter(promocao -> promocao.vigente(LocalDate.now()))
-                .toList();
+        Map<String, Long> comprasPorCategoria = contarComprasPorCategoria(historico);
+        Set<Integer> produtosComprados = coletarProdutosComprados(historico);
+        List<Promocao> promocoesVigentes = buscarPromocoesVigentes();
 
         return produtoRepository.findAtivosComEstoqueDisponivel().stream()
                 .map(produto -> pontuadorRecomendacao.pontuar(
@@ -70,6 +62,26 @@ public class MotorRecomendacaoService {
                 .sorted(Comparator.comparingDouble(Recomendacao::score).reversed()
                         .thenComparing(recomendacao -> recomendacao.produto().getId()))
                 .limit(limite)
+                .toList();
+    }
+
+    private Map<String, Long> contarComprasPorCategoria(List<Pedido> historico) {
+        return historico.stream()
+                .flatMap(pedido -> pedido.getItens().stream())
+                .collect(Collectors.groupingBy(
+                        item -> NormalizadorCategoria.normalizar(item.getProduto().getCategoria()), Collectors.counting()));
+    }
+
+    private Set<Integer> coletarProdutosComprados(List<Pedido> historico) {
+        return historico.stream()
+                .flatMap(pedido -> pedido.getItens().stream())
+                .map(item -> item.getProduto().getId())
+                .collect(Collectors.toSet());
+    }
+
+    private List<Promocao> buscarPromocoesVigentes() {
+        return promocaoRepository.findAll().stream()
+                .filter(promocao -> promocao.vigente(LocalDate.now()))
                 .toList();
     }
 

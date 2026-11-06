@@ -1,13 +1,18 @@
 package com.desafiogc.RecommedationEngine.api.recomendacao;
 
 import com.desafiogc.RecommedationEngine.model.cliente.Cliente;
+import com.desafiogc.RecommedationEngine.model.recomendacao.Recomendacao;
 import com.desafiogc.RecommedationEngine.repository.ClienteRepository;
 import com.desafiogc.RecommedationEngine.service.MotorRecomendacaoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -39,10 +44,7 @@ public class RecomendacaoController {
             @RequestParam(defaultValue = "10") int limiteClientes,
             @RequestParam(defaultValue = "10") int limitePorCliente
     ) {
-        if (limiteClientes < 1 || limiteClientes > 25) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "O limite de clientes deve estar entre 1 e 25.");
-        }
+        validarLimiteClientes(limiteClientes);
         validarLimite(limitePorCliente);
 
         var clientes = motorRecomendacaoService
@@ -74,14 +76,11 @@ public class RecomendacaoController {
         BigDecimal aplicado = configurado == null || configurado.signum() <= 0
                 ? BigDecimal.ONE
                 : configurado;
-        List<RecomendacaoDTO> itens = recomendacoes.stream().map(RecomendacaoDTO::from).toList();
+        List<RecomendacaoDTO> itens = mapearRecomendacoes(recomendacoes);
 
         return ResponseEntity.ok(new DiagnosticoRecomendacaoDTO(
                 clienteId,
-                cidade == null || cidade.isBlank()
-                        ? cliente.getCidade() != null ? cliente.getCidade()
-                        : cliente.getCep() == null ? null : "CEP " + cliente.getCep()
-                        : cidade.trim(),
+                resolverCidadeConsultada(cidade, cliente),
                 cidadeRegional == null ? null : cidadeRegional.getNome(),
                 cidadeRegional == null ? null : cidadeRegional.getRegiao(),
                 configurado,
@@ -99,5 +98,27 @@ public class RecomendacaoController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "O limite deve estar entre 1 e 100.");
         }
+    }
+
+    private static void validarLimiteClientes(int limiteClientes) {
+        if (limiteClientes < 1 || limiteClientes > 25) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "O limite de clientes deve estar entre 1 e 25.");
+        }
+    }
+
+    private static List<RecomendacaoDTO> mapearRecomendacoes(
+            List<Recomendacao> recomendacoes) {
+        return recomendacoes.stream().map(RecomendacaoDTO::from).toList();
+    }
+
+    private static String resolverCidadeConsultada(String cidade, Cliente cliente) {
+        if (cidade != null && !cidade.isBlank()) {
+            return cidade.trim();
+        }
+        if (cliente.getCidade() != null) {
+            return cliente.getCidade();
+        }
+        return cliente.getCep() == null ? null : "CEP " + cliente.getCep();
     }
 }
