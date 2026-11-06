@@ -58,8 +58,6 @@ $env:SPRING_DATASOURCE_USERNAME = "<usuario>"
 $env:SPRING_DATASOURCE_PASSWORD = "<senha>"
 ```
 
-Use valores próprios do seu ambiente. Não coloque credenciais reais no README, no repositório ou em exemplos compartilhados.
-
 O Hibernate está configurado com `ddl-auto=validate`: valida o mapeamento Java contra o banco e não cria nem altera tabelas. O Flyway usa `src/main/resources/db/migration` e o schema `public`.
 
 #### Migrations
@@ -88,12 +86,12 @@ Na raiz do projeto:
 ./mvnw spring-boot:run
 ```
 
-A aplicação fica em `http://localhost:8080`. A interface Swagger está em `http://localhost:8080/swagger-ui/index.html` e a especificação OpenAPI em `http://localhost:8080/v3/api-docs`.
+A aplicação fica em `https://desafio-gc26.onrender.com/`. A interface Swagger está em `http://localhost:8080/swagger-ui/index.html` e a especificação OpenAPI em `http://localhost:8080/v3/api-docs`.
 
 ### Telas
 
-- `http://localhost:8080/` ou `/index.html`: autoatendimento do cliente.
-- `http://localhost:8080/vendedor.html`: painel da força de vendas.
+- `https://desafio-gc26.onrender.com/` ou `https://desafio-gc26.onrender.com/index.html`: autoatendimento do cliente.
+- `https://desafio-gc26.onrender.com/vendedor.html`: painel da força de vendas.
 - `/vendedor.html?codRepresentante={codigo}`: abre o painel de um representante específico.
 
 O painel carrega os representantes do banco e permite trocar a seleção. Se nenhum código for informado, usa o representante padrão `31906` quando existir; caso contrário, seleciona o primeiro disponível.
@@ -129,9 +127,6 @@ O painel carrega os representantes do banco e permite trocar a seleção. Se nen
 | `GET` | `/api/recomendacoes/{clienteId}/diagnostico?limite=10` | Retorna recomendações e resumo de localização, região, multiplicador, recompras e cross-sells. |
 | `GET` | `/api/recomendacoes/quebra-consumo?limiteClientes=10&limitePorCliente=10` | Gera recomendações para clientes na view. Limite de até 25 clientes e 100 recomendações por cliente. |
 | `POST` | `/api/admin/processar-cross-sell` | Recalcula e persiste os produtos complementares com base nos pedidos existentes. |
-| `GET` | `/api/contexto/clima?cidade={cidade}&uf={UF}&cep={CEP}` | Consulta clima atual. Cidade e UF são usadas como alternativa se o CEP não fornecer coordenadas. |
-| `GET` | `/api/contexto/localizacao?cidade={cidade}` | Consulta coordenadas e região geográfica da cidade. |
-| `GET` | `/api/contexto/feriados?ano={ano}&uf={UF}` | Lista feriados; UF é opcional. |
 
 Todos os `POST` recebem JSON com `Content-Type: application/json`. Exemplos de corpos:
 
