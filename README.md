@@ -127,6 +127,7 @@ O painel carrega os representantes do banco e permite trocar a seleção. Se nen
 | `GET` | `/api/recomendacoes/{clienteId}/diagnostico?limite=10` | Retorna recomendações e resumo de localização, região, multiplicador, recompras e cross-sells. |
 | `GET` | `/api/recomendacoes/quebra-consumo?limiteClientes=10&limitePorCliente=10` | Gera recomendações para clientes na view. Limite de até 25 clientes e 100 recomendações por cliente. |
 | `POST` | `/api/admin/processar-cross-sell` | Recalcula e persiste os produtos complementares com base nos pedidos existentes. |
+| `POST` | `/api/notificacoes/processar-recuperacao` | Percorre clientes na view de quebra, calcula recomendações e grava notificações RECUPERACAO quando há sugestões. |
 
 Todos os `POST` recebem JSON com `Content-Type: application/json`. Exemplos de corpos:
 
@@ -179,7 +180,7 @@ O cross-sell calcula frequência e confiança de pares de produtos no mesmo pedi
 
 A migration V3 cria `vw_clientes_quebra_consumo`. A view estima o intervalo médio entre compras para clientes com pelo menos três pedidos e marca quebra quando os dias sem comprar ultrapassam 1,5 vez esse intervalo. A tela do representante usa esses dados para sinalizar clientes prioritários.
 
-A entidade e o repositório de notificações estão mapeados, incluindo o tipo `RECUPERACAO`. Ainda não há endpoint ou serviço que gere e envie mensagens automaticamente.
+Ao cadastrar uma promoção, o serviço grava notificações `PROMOCAO` para clientes com histórico de compra do produto ou família alvo. O endpoint manual `/api/notificacoes/processar-recuperacao` percorre os clientes na view, usa o motor para buscar até três sugestões e grava `RECUPERACAO` quando há itens recomendáveis; cada cliente recebe no máximo uma recuperação por dia. Os registros ficam com status `PENDENTE` e canal `APP`: não há integração de envio de mensagens por WhatsApp ou SMS.
 
 ## Testes
 
